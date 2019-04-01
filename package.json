@@ -1,0 +1,31 @@
+{
+  "name": "ssml-check-core",
+  "version": "0.1.0",
+  "description": "Core library to check for valid SSML",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/test.js"
+  },
+  "dependencies": {
+    "xml-js": "^1.6.11"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gsdriver/ssml-check-core"
+  },
+  "keywords": [
+    "ssml",
+    "alexa",
+    "google",
+    "voice",
+    "speech",
+    "amazon alexa",
+    "google assistant",
+    "vui"
+  ],
+  "author": "Garrett Vargas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gsdriver/ssml-check-core/issues"
+  }
+}
