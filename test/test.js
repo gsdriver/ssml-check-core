@@ -96,6 +96,7 @@ promises.push(runTest('Valid volume', '<speak><prosody volume="loud">Hello world
 promises.push(runTest('Invalid volume', '<speak><prosody volume="xx-large">Hello world</prosody></speak>', null, 'prosody tag has invalid volume value xx-large'));
 promises.push(runTest('Valid volume dB', '<speak><prosody volume="+4.5dB">Hello world</prosody></speak>', null, 'valid'));
 promises.push(runTest('Invalid volume dB', '<speak><prosody volume="-5.5.5dB">Hello world</prosody></speak>', null, 'prosody tag has invalid volume value -5.5.5dB'));
+promises.push(runTest('Prosody st', '<speak><prosody rate="slow" pitch="-1st">Come in!<break time="0.5"/>Welcome to the terrifying world of the imagination.</prosody></speak>', {platform: 'google'}, 'valid'));
 
 // say-as tests
 promises.push(runTest('Valid say-as Amazon', '<speak><say-as interpret-as="interjection">Wow</say-as></speak>', {platform: 'amazon'}, 'valid'));
@@ -114,10 +115,13 @@ promises.push(runTest('Valid voice', '<speak>I want to tell you a secret. <voice
 
 // Media tests
 promises.push(runTest('Valid media', '<speak><seq><media begin="0.5s"><speak>Who invented the Internet?</speak></media><media begin="2.0s"><speak>The Internet was invented by cats.</speak></media><media soundLevel="-6dB"><audio src="https://actions.google.com/.../cartoon_boing.ogg"/></media><media repeatCount="3" soundLevel="+2.28dB" fadeInDur="2s" fadeOutDur="0.2s"><audio src="https://actions.google.com/.../cat_purr_close.ogg"/></media></seq> </speak>', {platform: 'google'}, 'valid'));
+promises.push(runTest('Issue 1', '<speak><media xml:id="crowd" soundLevel="5dB" fadeOutDur="1.0s"><audio src="https://actions.google.com/sounds/v1/crowds/battle_cry_high_pitch.ogg" clipEnd="3.0s"><desc>crowd cheering</desc>YEAH!</audio></media></speak>', {platform: 'google'}, 'valid'));
+promises.push(runTest('Issue 2', '<speak><media xml:id="words" begin="crowd.end-1.0s"><speak><emphasis level="strong">Great catch by Amendola! I can\'t believe he got both feet in bounds!</emphasis></speak></media></speak>', {platform: 'google'}, 'valid'));
+promises.push(runTest('Valid syncbase', '<speak><media xml:id="background" soundLevel="-5dB" begin="1s" end="words.end-0.0s" fadeInDur="2.0s" fadeOutDur="1.0s"><audio src="https://actions.google.com/sounds/v1/crowds/battle_crowd_celebration.ogg"><desc>crowd cheering</desc>YEAH!</audio></media></speak>', {platform: 'google'}, 'valid'));
+promises.push(runTest('Long sample', '<speak><par><media xml:id="intro" soundLevel="5dB" fadeOutDur="2.0s"><audio src="https://upload.wikimedia.org/wikipedia/commons/4/43/Nowhere_Land_%28ISRC_USUAN1600051%29.mp3" clipEnd="5.0s"><desc>news intro</desc>INTRO</audio></media><media xml:id="crowd" soundLevel="5dB" fadeOutDur="1.0s" begin="intro.end-1.0s"><audio src="https://actions.google.com/sounds/v1/crowds/battle_cry_high_pitch.ogg" clipEnd="3.0s"><desc>crowd cheering</desc>YEAH!</audio></media><media xml:id="words" begin="crowd.end-1.0s"><speak><emphasis level="strong">Great catch by Amendola! I can\'t believe he got both feet in bounds!</emphasis></speak></media><media xml:id="background" soundLevel="-5dB" begin="1s" end="words.end-0.0s" fadeInDur="2.0s" fadeOutDur="1.0s"><audio src="https://actions.google.com/sounds/v1/crowds/battle_crowd_celebration.ogg"><desc>crowd cheering</desc>YEAH!</audio></media><media xml:id="cheer" begin="words.end-1.0s" soundLevel="0dB" fadeOutDur="1.0s"><audio src="https://actions.google.com/sounds/v1/crowds/team_cheer.ogg" clipBegin="2.0s" clipEnd="6.0s"><desc>team cheer</desc>CHEER!</audio></media></par></speak>', {platform: 'google'}, 'valid'));
 
 // Multiple errors
 promises.push(runTest('Bad break and invalid prosody rate', '<speak>You lost <break tim="200ms"/> Getting used to losing?  <prosody rate="xx-large">Take a break and come back tomorrow</prosody></speak>', null, 'break tag has invalid attribute timprosody tag has invalid rate value xx-large'));
-promises.push(runTest('Issue 1', '<speak><media xml:id="crowd" soundLevel="5dB" fadeOutDur="1.0s"><audio src="https://actions.google.com/sounds/v1/crowds/battle_cry_high_pitch.ogg" clipEnd="3.0s"><desc>crowd cheering</desc>YEAH!</audio></media></speak>', {platform: 'google'}, 'valid'));
 
 // Invalid formats
 promises.push(runTest('Invalid XML', '<tag>What is this?', null, 'Can\'t parse SSML'));

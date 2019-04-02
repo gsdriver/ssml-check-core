@@ -35,7 +35,7 @@ function prosodyRate(text) {
   return (rate) ? (rate / 100.0) : undefined;
 }
 
-function readDuration(text, maximum) {
+function readDuration(text, platform, maximum) {
   // It must be of the form #s or #ms
   let time;
   if (!maximum && (text === 'infinity')) {
@@ -43,6 +43,8 @@ function readDuration(text, maximum) {
   } else if (text.match('[0-9]+ms')) {
     time = parseInt(text);
   } else if (text.match(/^[0-9]+(\.[0-9]+)?s$/g)) {
+    time = 1000 * parseInt(text);
+  } else if ((platform === 'google') && text.match(/^[0-9]+(\.[0-9]+)?$/g)) {
     time = 1000 * parseInt(text);
   } else {
     // No good
@@ -109,11 +111,11 @@ function checkForValidTags(errors, element, platform, parent) {
           // Must be src attribute
           attributes.forEach((attribute) => {
             if ((platform === 'google') && (attribute === 'clipBegin')) {
-              if (readDuration(element.attributes.clipBegin) === undefined) {
+              if (readDuration(element.attributes.clipBegin, platform) === undefined) {
                 errors.push(createTagError(element, attribute));
               }
             } else if ((platform === 'google') && (attribute === 'clipEnd')) {
-              if (readDuration(element.attributes.clipEnd) === undefined) {
+              if (readDuration(element.attributes.clipEnd, platform) === undefined) {
                 errors.push(createTagError(element, attribute));
               }
             } else if ((platform === 'google') && (attribute === 'speed')) {
@@ -131,7 +133,7 @@ function checkForValidTags(errors, element, platform, parent) {
                 errors.push(createTagError(element, attribute));
               }
             } else if ((platform === 'google') && (attribute === 'repeatDur')) {
-              if (readDuration(element.attributes.repeatDur) === undefined) {
+              if (readDuration(element.attributes.repeatDur, platform) === undefined) {
                 errors.push(createTagError(element, attribute));
               }
             } else if ((platform === 'google') && (attribute === 'soundLevel')) {
@@ -165,7 +167,7 @@ function checkForValidTags(errors, element, platform, parent) {
               }
             } else if (attribute === 'time') {
               // Must be valid duration
-              if (readDuration(element.attributes.time, 10000) === undefined) {
+              if (readDuration(element.attributes.time, platform, 10000) === undefined) {
                 errors.push(createTagError(element, attribute));
               }
             } else {
@@ -230,12 +232,12 @@ function checkForValidTags(errors, element, platform, parent) {
               }
             } else if (attribute === 'begin') {
               if (!element.attributes.begin.match(/^[+-]?[0-9]+(\.[0-9]+)?(h|min|s|ms)$/g)
-                && !element.attributes.begin.match(/^.\.(begin|end)[+-][0-9]+(\.[0-9]+)?(h|min|s|ms)$/g)) {
+                && !element.attributes.begin.match(/^([-_#]|[a-z]|[A-Z]|ß|ö|ä|ü|Ö|Ä|Ü|æ|é|[0-9])+\.(begin|end)[+-][0-9]+(\.[0-9]+)?(h|min|s|ms)$/g)) {
                 errors.push(createTagError(element, attribute));
               }
             } else if (attribute === 'end') {
               if (!element.attributes.end.match(/^[+-]?[0-9]+(\.[0-9]+)?(h|min|s|ms)$/g)
-                && !element.attributes.end.match(/^.\.(begin|end)[+-][0-9]+(\.[0-9]+)?(h|min|s|ms)$/g)) {
+                && !element.attributes.end.match(/^([-_#]|[a-z]|[A-Z]|ß|ö|ä|ü|Ö|Ä|Ü|æ|é|[0-9])+\.(begin|end)[+-][0-9]+(\.[0-9]+)?(h|min|s|ms)$/g)) {
                 errors.push(createTagError(element, attribute));
               }
             } else if (attribute === 'repeatCount') {
@@ -243,7 +245,7 @@ function checkForValidTags(errors, element, platform, parent) {
                 errors.push(createTagError(element, attribute));
               }
             } else if (attribute === 'repeatDur') {
-              if (readDuration(element.attributes.repeatDur) === undefined) {
+              if (readDuration(element.attributes.repeatDur, platform) === undefined) {
                 errors.push(createTagError(element, attribute));
               }
             } else if (attribute === 'soundLevel') {
@@ -252,11 +254,11 @@ function checkForValidTags(errors, element, platform, parent) {
                 errors.push(createTagError(element, attribute));
               }
             } else if (attribute === 'fadeInDur') {
-              if (readDuration(element.attributes.fadeInDur) === undefined) {
+              if (readDuration(element.attributes.fadeInDur, platform) === undefined) {
                 errors.push(createTagError(element, attribute));
               }
             } else if (attribute === 'fadeOutDur') {
-              if (readDuration(element.attributes.fadeOutDur) === undefined) {
+              if (readDuration(element.attributes.fadeOutDur, platform) === undefined) {
                 errors.push(createTagError(element, attribute));
               }
             } else {
@@ -320,7 +322,8 @@ function checkForValidTags(errors, element, platform, parent) {
                   if (parseFloat(element.attributes.pitch) < -33.3) {
                     errors.push(createTagError(element, attribute));
                   }
-                } else {
+                } else if ((platform !== 'google') ||
+                  !element.attributes.pitch.match(/^[+-]+[0-9]+(\.[0-9]+)?st$/g)) {
                   errors.push(createTagError(element, attribute));
                 }
               }
