@@ -225,7 +225,7 @@ function checkForValidTags(errors, element, platform, parent) {
         case 'media':
           attributes.forEach((attribute) => {
             if (attribute === 'xml:id') {
-              if (!element.attributes['xml:id'].match(/^([-_#]|\p{L}|\p{D})+$/g)) {
+              if (!element.attributes['xml:id'].match(/^([-_#]|[a-z]|[A-Z]|ß|ö|ä|ü|Ö|Ä|Ü|æ|é|[0-9])+$/g)) {
                 errors.push(createTagError(element, attribute));
               }
             } else if (attribute === 'begin') {
@@ -248,7 +248,7 @@ function checkForValidTags(errors, element, platform, parent) {
               }
             } else if (attribute === 'soundLevel') {
               // It's OK if it's of the form +xdB or - xdB; value doesn't matter
-              if (!element.attributes.soundLevel.match(/^[+-][0-9]+(\.[0-9]+)?dB$/g)) {
+              if (!element.attributes.soundLevel.match(/^[+-]?[0-9]+(\.[0-9]+)?dB$/g)) {
                 errors.push(createTagError(element, attribute));
               }
             } else if (attribute === 'fadeInDur') {

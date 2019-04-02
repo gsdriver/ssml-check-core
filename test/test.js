@@ -117,6 +117,7 @@ promises.push(runTest('Valid media', '<speak><seq><media begin="0.5s"><speak>Who
 
 // Multiple errors
 promises.push(runTest('Bad break and invalid prosody rate', '<speak>You lost <break tim="200ms"/> Getting used to losing?  <prosody rate="xx-large">Take a break and come back tomorrow</prosody></speak>', null, 'break tag has invalid attribute timprosody tag has invalid rate value xx-large'));
+promises.push(runTest('Issue 1', '<speak><media xml:id="crowd" soundLevel="5dB" fadeOutDur="1.0s"><audio src="https://actions.google.com/sounds/v1/crowds/battle_cry_high_pitch.ogg" clipEnd="3.0s"><desc>crowd cheering</desc>YEAH!</audio></media></speak>', {platform: 'google'}, 'valid'));
 
 // Invalid formats
 promises.push(runTest('Invalid XML', '<tag>What is this?', null, 'Can\'t parse SSML'));
