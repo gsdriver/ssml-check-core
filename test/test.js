@@ -124,11 +124,6 @@ promises.push(runTest('Too many audio files', '<speak><audio src=\"https://www.f
 promises.push(runTest('Invalid platform', '<speak>Hello there</speak>', {platform: 'siri'}, 'invalid platform'));
 promises.push(runTest('Invalid ampersand', '<speak>This & that</speak>', null, 'Invalid & character'));
 
-// JSON objects
-promises.push(runTest('simple JSON', {"elements":[{"type":"element","name":"speak","elements":[{"type":"text","text":"Simple test"}]}]}, null, 'valid'));
-promises.push(runTest('break JSON', {"elements":[{"type":"element","name":"speak","elements":[{"type":"text","text":"You lost "},{"type":"element","name":"break","attributes":{"time":"200ms"}},{"type":"text","text":" Getting used to losing?  Take a break and come back tomorrow"}]}]}, null, 'valid'));
-promises.push(runTest('invalid prosody JSON', {"elements":[{"type":"element","name":"speak","elements":[{"type":"element","name":"prosody","attributes":{"volume":"xx-large"},"elements":[{"type":"text","text":"Hello world"}]}]}]}, null, 'prosody tag has invalid volume value xx-large'));
-
 // Final summary
 Promise.all(promises).then(() => {
   console.log('\r\nRan ' + (succeeded + failed) + ' tests in ' + (Date.now() - start) + 'ms; ' + succeeded + ' passed and ' + failed + ' failed');

@@ -12,7 +12,7 @@ check(ssml, options)
 
 The arguments to these functions are:
 
- * ssml - The SSML to check. This can either be a string or a JSON object representing the parsed SSML (the common use case is to pass a string)
+ * ssml - The SSML to check
  * options - Options for evaluating the SSML as noted below
  
 The options structure is composed of the following fields with the following default values:

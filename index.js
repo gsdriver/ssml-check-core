@@ -459,29 +459,22 @@ module.exports = {
         return Promise.resolve(errors);
       }
 
-      // The input is either a string or a JSON object - convert it if
-      // it is a string into a JSON object
-      if (typeof ssml === 'object') {
-        // It's already an object
-        result = ssml;
-      } else {
+      try {
+        result = JSON.parse(convert.xml2json(ssml, {compact: false}));
+      } catch (err) {
+        // Special case - if we replace & with &amp; does it fix it?
         try {
-          result = JSON.parse(convert.xml2json(ssml, {compact: false}));
-        } catch (err) {
-          // Special case - if we replace & with &amp; does it fix it?
-          try {
-            let text = ssml;
-            text = text.replace('&', '&amp;');
-            JSON.parse(convert.xml2json(text, {compact: false}));
+          let text = ssml;
+          text = text.replace('&', '&amp;');
+          JSON.parse(convert.xml2json(text, {compact: false}));
 
-            // OK that worked, let them know it's an & problem
-            errors.push({type: 'Invalid & character'});
-          } catch(err) {
-            // Nope, it's some other error
-            errors.push({type: 'Can\'t parse SSML'});
-          }
-          return Promise.resolve(errors);
+          // OK that worked, let them know it's an & problem
+          errors.push({type: 'Invalid & character'});
+        } catch(err) {
+          // Nope, it's some other error
+          errors.push({type: 'Can\'t parse SSML'});
         }
+        return Promise.resolve(errors);
       }
 
       // This needs to be a single item wrapped in a speak tag
