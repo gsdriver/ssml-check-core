@@ -1,6 +1,6 @@
 {
   "name": "ssml-check-core",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Core library to check for valid SSML",
   "main": "index.js",
   "scripts": {
