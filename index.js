@@ -494,9 +494,12 @@ module.exports = {
       checkForValidTags(errors, speech, userOptions.platform);
 
       // Count the audio files - is it more than 5?
-      const audio = getAudioFiles(speech);
-      if (audio.length > 5) {
-        errors.push({type: 'Too many audio files'});
+      // This isn't allowed for Amazon
+      if (userOptions.platform !== 'google') {
+        const audio = getAudioFiles(speech);
+        if (audio.length > 5) {
+          errors.push({type: 'Too many audio files'});
+        }
       }
 
       return Promise.resolve(errors.length ? errors : undefined);
