@@ -289,7 +289,6 @@ function checkForValidTags(errors, element, platform, parent) {
 
           break;
         case 'phoneme':
-          // Attribute must be time or strength
           attributes.forEach((attribute) => {
             if (attribute === 'alphabet') {
               if (['ipa', 'x-sampa']
@@ -303,7 +302,6 @@ function checkForValidTags(errors, element, platform, parent) {
           });
           break;
         case 'prosody':
-          // Attribute must be time or strength
           attributes.forEach((attribute) => {
             if (attribute === 'rate') {
               if (!prosodyRate(element.attributes.rate)) {
