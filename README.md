@@ -4,7 +4,10 @@ SSML-Check-Core will verify that a given input is valid SSML
 
 # Usage
 
-This library exposes two functions.  The first is `check` which verifies whether the given input is a valid SSML string on either the Amazon Alexa or Google Assistant platform (or both). This function returns a Promise with an array of errors indicating how the input fails validation, or a Promise of undefined if there are no errors.
+This library exposes two functions which allow you to check and optionally correct a given SSML string
+
+### Check
+The first is `check` which verifies whether the given input is a valid SSML string on either the Amazon Alexa or Google Assistant platform (or both). This function returns a Promise with an array of errors indicating how the input fails validation, or a Promise of undefined if there are no errors.
 
 ```
 check(ssml, options)
@@ -41,7 +44,8 @@ The current version of ssml-check-core will check for the following:
  * All tags are valid tags for their platform with valid attributes and values
  * No more than five `audio` tags in the response
  * Note invalid & character
- 
+
+### Correct 
 The second function is `correct` which, similar to check returns a Promise with an array of caught SSML errors. In addition, this function will attempt to provide corrected SSML if possible as noted below.
 
 ```
