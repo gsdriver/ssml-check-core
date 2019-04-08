@@ -113,7 +113,7 @@ function checkInternal(ssml, options, fix) {
       // Special case - if we replace & with &amp; does it fix it?
       try {
         let text = ssml;
-        text = text.replace('&', '&amp;');
+        text = text.replace(/&/g, '&amp;');
         result = JSON.parse(convert.xml2json(text, {compact: false}));
 
         // OK that worked, let them know it's an & problem
