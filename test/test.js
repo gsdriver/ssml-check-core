@@ -40,8 +40,8 @@ function runTest(testName, ssml, options, expectedResult) {
 }
 
 function runCorrection(testName, ssml, options, expectedResult) {
-  return lib.correct(ssml, options).then((retVal) => {
-    let result = (retVal && retVal.correctedSSML) ? retVal.correctedSSML : undefined;
+  return lib.verifyAndFix(ssml, options).then((retVal) => {
+    let result = (retVal && retVal.fixedSSML) ? retVal.fixedSSML : undefined;
     if (result == expectedResult) {
       succeeded++;
     } else {

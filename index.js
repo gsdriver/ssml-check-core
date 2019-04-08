@@ -636,7 +636,7 @@ module.exports = {
         return result.errors;
       });
   },
-  correct: function(ssml, options) {
+  verifyAndFix: function(ssml, options) {
     return checkInternal(ssml, options, true)
       .then((result) => {
         let ssml;
@@ -645,7 +645,7 @@ module.exports = {
           ssml = convert.json2xml(result.json, {compact: false});
         }
 
-        return {correctedSSML: ssml, errors: result.errors};
+        return {fixedSSML: ssml, errors: result.errors};
       });
   },
 };

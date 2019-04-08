@@ -6,7 +6,7 @@ SSML-Check-Core will verify that a given input is valid SSML
 
 This library exposes two functions which allow you to check and optionally correct a given SSML string
 
-### Check
+## Check
 The first is `check` which verifies whether the given input is a valid SSML string on either the Amazon Alexa or Google Assistant platform (or both). This function returns a Promise with an array of errors indicating how the input fails validation, or a Promise of undefined if there are no errors.
 
 ```
@@ -45,11 +45,26 @@ The current version of ssml-check-core will check for the following:
  * No more than five `audio` tags in the response
  * Note invalid & character
 
-### Correct 
-The second function is `correct` which, similar to check returns a Promise with an array of caught SSML errors. In addition, this function will attempt to provide corrected SSML if possible as noted below.
+### Example
 
 ```
-correct(ssml, options)
+const ssmlCheck = require('ssml-check-core');
+ssmlCheck.check('<speak><prosody rate="5%">Hello world</prosody></speak>')
+.then((errors) => {
+  if (errors) {
+    console.log(JSON.stringify(errors));
+  } else {
+    console.log('SSML is clean');
+  }
+});
+```
+will output `[{"type":"tag","tag":"prosody","attribute":"rate","value":"5%"}]`
+
+## verifyAndFix 
+The second function is `verifyAndFix` which, similar to check returns a Promise with an array of caught SSML errors. In addition, this function will attempt to provide corrected SSML if possible as noted below.
+
+```
+verifyAndFix(ssml, options)
 ```
 
 The arguments to this function, including the options structure, are the same as for check.
@@ -58,10 +73,10 @@ The return value is a Promise resolving to an object with the following fields (
 
 ```
 {
-  correctedSSML, // A corrected SSML string if errors are found that can be corrected for
-                 // This field will be undefined if the SSML cannot be corrected
-  errors,        // An array of errors. The format of each object in this array is as
-                 // defined above for the check function     
+  fixedSSML,  // A fixed SSML string if errors are found that can be corrected for
+              // This field will be undefined if the SSML cannot be corrected
+  errors,     // An array of errors. The format of each object in this array is as
+              // defined above for the check function     
 }
 ```
 
@@ -70,8 +85,9 @@ The current version of ssml-check-core will correct the following errors:
  * If more than five `audio` tags are in the response, elements after the first five are removed
  * If an invalid tag is found, the element will be removed  
  * If an invalid attribute is found, it will be removed (in the case of the src attribute for audio, if this is missing or invalid the element will be removed)
- * If an invalid value is found for an attributes within a valid tag, a default value will be substituted 
-# Examples
+ * If an invalid value is found for an attribute within a valid tag, a default value will be substituted 
+
+### Example
 
 ```
 const ssmlCheck = require('ssml-check-core');
@@ -89,10 +105,10 @@ will output `[{"type":"tag","tag":"prosody","attribute":"rate","value":"5%"}]`
 
 ```
 const ssmlCheck = require('ssml-check-core');
-ssmlCheck.correct('<speak><tag>What is this?</tag><break time="20000ms"/>This & that</speak>')
+ssmlCheck.verifyAndFix('<speak><tag>What is this?</tag><break time="20000ms"/>This & that</speak>')
 .then((result) => {
-  if (result && result.correctedSSML) {
-    console.log(result.correctedSSML);
+  if (result && result.fixedSSML) {
+    console.log(result.fixedSSML);
   } else if (result && result.errors) {
     console.log(JSON.stringify(result.errors));
   } else {
@@ -101,6 +117,7 @@ ssmlCheck.correct('<speak><tag>What is this?</tag><break time="20000ms"/>This & 
 });
 ```
 will output `<speak><break time="10s"/>This &amp; that</speak>`
+
 # Contributions
 
 We love your input! We want to make contributing to this project as easy and transparent as possible, whether it's:
