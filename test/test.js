@@ -35,6 +35,20 @@ function runTest(testName, ssml, options, expectedResult) {
       console.log('FAIL: ' + testName + ' returned ' + result + ' rather than ' + expectedResult);
       failed++;
     }
+    return 0;
+  });
+}
+
+function runCorrection(testName, ssml, options, expectedResult) {
+  return lib.correct(ssml, options).then((retVal) => {
+    let result = (retVal && retVal.correctedSSML) ? retVal.correctedSSML : undefined;
+    if (result == expectedResult) {
+      succeeded++;
+    } else {
+      result = result || JSON.stringify(retVal.errors);
+      console.log('FAIL: ' + testName + ' returned ' + result + ' rather than ' + expectedResult);
+      failed++;
+    }
 
     return 0;
   });
@@ -70,7 +84,7 @@ promises.push(runTest('Google emphasis', '<speak>I already told you I <emphasis 
 
 // Lang tests
 promises.push(runTest('Valid lang', '<speak><lang xml:lang="fr-FR">J\'adore chanter</lang></speak>', {platform: 'amazon'}, 'valid'));
-promises.push(runTest('Invalid lang', '<speak><lang xml:lang="pt-BR">Blame it on Rior</lang></speak>', {platform: 'amazon'}, 'lang tag has invalid xml:lang value pt-BR'));
+promises.push(runTest('Invalid lang', '<speak><lang xml:lang="pt-BR">Blame it on Rio</lang></speak>', {platform: 'amazon'}, 'lang tag has invalid xml:lang value pt-BR'));
 
 // p tests
 promises.push(runTest('Valid p', '<speak><p>This is the first paragraph. There should be a pause after this text is spoken.</p><p>This is the second paragraph.</p></speak>', null, 'valid'));
@@ -129,6 +143,16 @@ promises.push(runTest('Invalid XML', '<tag>What is this?', null, 'Can\'t parse S
 promises.push(runTest('Too many audio files', '<speak><audio src=\"https://www.foo.com/foo.mp3\"/> one <audio src=\"https://www.foo.com/foo.mp3\"/> two <audio src=\"https://www.foo.com/foo.mp3\"/> three <audio src=\"https://www.foo.com/foo.mp3\"/> four <audio src=\"https://www.foo.com/foo.mp3\"/> five <audio src=\"https://www.foo.com/foo.mp3\"/> six </speak>', null, 'Too many audio files'));
 promises.push(runTest('Invalid platform', '<speak>Hello there</speak>', {platform: 'siri'}, 'invalid platform'));
 promises.push(runTest('Invalid ampersand', '<speak>This & that</speak>', null, 'Invalid & character'));
+
+// Test correct function
+promises.push(runCorrection('Too many audio files', '<speak><audio src=\"https://www.foo.com/foo.mp3\"/> one <audio src=\"https://www.foo.com/foo.mp3\"/> two <audio src=\"https://www.foo.com/foo.mp3\"/> three <audio src=\"https://www.foo.com/foo.mp3\"/> four <audio src=\"https://www.foo.com/foo.mp3\"/> five <audio src=\"https://www.foo.com/foo.mp3\"/> six </speak>', null, '<speak><audio src="https://www.foo.com/foo.mp3"/> one <audio src="https://www.foo.com/foo.mp3"/> two <audio src="https://www.foo.com/foo.mp3"/> three <audio src="https://www.foo.com/foo.mp3"/> four <audio src="https://www.foo.com/foo.mp3"/> five  six </speak>'));
+promises.push(runCorrection('Invalid ampersand', '<speak>This & that</speak>', null, '<speak>This &amp; that</speak>'));
+promises.push(runCorrection('Invalid prosody rate', '<speak><prosody rate="5%">Hello world</prosody></speak>', null, '<speak><prosody rate="100%">Hello world</prosody></speak>'));
+promises.push(runCorrection('Invalid volume', '<speak><prosody pokemon="pikachu" volume="louder">Hello <break time="200ms"/> world</prosody></speak>', null, '<speak><prosody volume="+0dB">Hello <break time="200ms"/> world</prosody></speak>'));
+promises.push(runCorrection('Whisper effect', '<speak><amazon:effect>Simple test <break strength="medium"/> code</amazon:effect></speak>', {platform: 'amazon'}, '<speak><amazon:effect name="whispered">Simple test <break strength="medium"/> code</amazon:effect></speak>'));
+promises.push(runCorrection('Invalid tag', '<speak><tag>What is this?</tag><break time="20000ms"/>This & that</speak>', null, '<speak><break time="10s"/>This &amp; that</speak>'));
+promises.push(runCorrection('Correct voice', '<speak>I want to tell you a secret. <voice name="Samantha">I am not a real human.</voice>. Can you believe it?</speak>', {platform: 'amazon'}, '<speak>I want to tell you a secret. <voice name="Ivy">I am not a real human.</voice>. Can you believe it?</speak>'));
+promises.push(runCorrection('Correct say-as all', '<speak><say-as interpret-as="bleep">Wow</say-as></speak>', {platform: 'all'}, '<speak><say-as interpret-as="cardinal">Wow</say-as></speak>'));
 
 // Final summary
 Promise.all(promises).then(() => {
