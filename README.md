@@ -91,20 +91,6 @@ The current version of ssml-check-core will correct the following errors:
 
 ```
 const ssmlCheck = require('ssml-check-core');
-ssmlCheck.check('<speak><prosody rate="5%">Hello world</prosody></speak>')
-.then((errors) => {
-  if (errors) {
-    console.log(JSON.stringify(errors));
-  } else {
-    console.log('SSML is clean');
-  }
-});
-```
-will output `[{"type":"tag","tag":"prosody","attribute":"rate","value":"5%"}]`
-
-
-```
-const ssmlCheck = require('ssml-check-core');
 ssmlCheck.verifyAndFix('<speak><tag>What is this?</tag><break time="20000ms"/>This & that</speak>')
 .then((result) => {
   if (result && result.fixedSSML) {
