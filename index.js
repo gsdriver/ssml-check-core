@@ -67,7 +67,11 @@ function checkForValidTagsRecursive(parent, index, errors, element, platform) {
       !(((platform === 'amazon') && (validAmazonTags.indexOf(element.name) !== -1)) ||
       ((platform === 'google') && (validGoogleTags.indexOf(element.name) !== -1)))) {
       errors.push({type: 'tag', tag: element.name});
-      parent.elements.splice(index, 1);
+      if (element.elements) {
+        parent.elements.splice(index, 1, ...element.elements);
+      } else {
+        parent.elements.splice(index, 1);
+      }
       removedTag = true;
     } else {
       const funcName = 'check_' + element.name.replace(/:|-/g, '_');

@@ -61,7 +61,7 @@ ssmlCheck.check('<speak><prosody rate="5%">Hello world</prosody></speak>')
 will output `[{"type":"tag","tag":"prosody","attribute":"rate","value":"5%"}]`
 
 ## verifyAndFix 
-The second function is `verifyAndFix` which, similar to check returns a Promise with an array of caught SSML errors. In addition, this function will attempt to provide corrected SSML if possible as noted below.
+The second function is `verifyAndFix` which returns a Promise of an object containing an array of caught SSML errors (similar to check) and, if possible, corrected SSML as noted below.
 
 ```
 verifyAndFix(ssml, options)
@@ -69,40 +69,58 @@ verifyAndFix(ssml, options)
 
 The arguments to this function, including the options structure, are the same as for check.
 
-The return value is a Promise resolving to an object with the following fields (or `undefined` if there are no errors):
+The return value is a Promise resolving to an object with the following fields:
 
 ```
 {
   fixedSSML,  // A fixed SSML string if errors are found that can be corrected for
               // This field will be undefined if the SSML cannot be corrected
   errors,     // An array of errors. The format of each object in this array is as
-              // defined above for the check function     
+              // defined above for the check function. This field is undefined
+              // if there are no errors.    
 }
 ```
+
+If there are no errors, then the Promise will contain an empty object.
 
 The current version of ssml-check-core will correct the following errors:
 
  * If more than five `audio` tags are in the response, elements after the first five are removed
- * If an invalid tag is found, the element will be removed  
+ * If an invalid tag is found, the tag will be removed but the contents of the element will remain 
  * If an invalid attribute is found, it will be removed (in the case of the src attribute for audio, if this is missing or invalid the element will be removed)
- * If an invalid value is found for an attribute within a valid tag, a default value will be substituted 
+ * If an invalid value is found for an attribute within a valid tag, the value will be corrected as best possible. For example, adding a leading + to values that require it like prosody's pitch attribute, adjusting the value to be within an acceptable range, or substituting a default value if necessary 
 
-### Example
+### Examples
 
 ```
 const ssmlCheck = require('ssml-check-core');
 ssmlCheck.verifyAndFix('<speak><tag>What is this?</tag><break time="20000ms"/>This & that</speak>')
 .then((result) => {
-  if (result && result.fixedSSML) {
+  if (result.fixedSSML) {
     console.log(result.fixedSSML);
-  } else if (result && result.errors) {
+  } else if (result.errors) {
     console.log(JSON.stringify(result.errors));
   } else {
     console.log('SSML is clean');
   }
 });
 ```
-will output `<speak><break time="10s"/>This &amp; that</speak>`
+will output `<speak>What is this?<break time="10s"/>This &amp; that</speak>`
+
+```
+const ssmlCheck = require('ssml-check-core');
+ssmlCheck.verifyAndFix('<speak><prosody rate="60">Hello world</prosody></speak>')
+.then((result) => {
+  if (result.fixedSSML) {
+    console.log(result.fixedSSML);
+  } else if (result.errors) {
+    console.log(JSON.stringify(result.errors));
+  } else {
+    console.log('SSML is clean');
+  }
+});
+```
+will output `<speak><prosody rate="60%">Hello world</prosody></speak>`
 
 # Contributions
 

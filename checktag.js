@@ -12,27 +12,6 @@ function createTagError(element, attribute, undefinedValue) {
   return error;
 }
 
-function prosodyRate(text) {
-  const rates = ['x-slow', 'slow', 'medium', 'fast', 'x-fast'];
-  const values = [0.3, 0.6, 1, 1.5, 2];
-
-  let i = rates.indexOf(text);
-  if (i > -1) {
-    return values[i];
-  }
-
-  // It must be of the form #%
-  let rate;
-  if (text.match('[0-9]+%')) {
-    rate = parseInt(text);
-    if (rate < 20) {
-      rate = undefined;
-    }
-  }
-
-  return (rate) ? (rate / 100.0) : undefined;
-}
-
 function readDuration(text, platform, maximum) {
   // It must be of the form #s or #ms
   let time;
@@ -373,9 +352,13 @@ const check_prosody = (parent, index, errors, element, platform) => {
   const attributes = Object.keys(element.attributes || {});
   attributes.forEach((attribute) => {
     if (attribute === 'rate') {
-      if (!prosodyRate(element.attributes.rate)) {
-        errors.push(createTagError(element, attribute));
-        element.attributes.rate = '100%';
+      if (['x-slow', 'slow', 'medium', 'fast', 'x-fast'].indexOf(element.attributes.rate) === -1) {
+        // Must be of the form #%
+        const rate = numberInRange(element.attributes.rate, 20, Number.MAX_SAFE_INTEGER, 100);
+        if (!element.attributes.rate.match(/^[0-9]+(\.[0-9]+)?%$/g) || !rate.inRange) {
+          errors.push(createTagError(element, attribute));
+          element.attributes.rate = rate.value + '%';
+        }
       }
     } else if (attribute === 'pitch') {
       if (['x-low', 'low', 'medium', 'high', 'x-high'].indexOf(element.attributes.pitch) === -1) {
