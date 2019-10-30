@@ -22,7 +22,7 @@ The options structure is composed of the following fields with the following def
 
 ```
 {
-  platform:all,     // The voice platform to evaluate this SSML against.
+  platform: 'all',     // The voice platform to evaluate this SSML against.
                     // Valid values are "all", "amazon", or "google".
 }
 ```
