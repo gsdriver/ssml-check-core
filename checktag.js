@@ -85,11 +85,14 @@ const check_amazon_effect = (parent, index, errors, element, platform, locale) =
 const check_amazon_emotion = (parent, index, errors, element, platform, locale) => {
   // This tag is only valid for en-US
   if (locale !== 'en-US') {
-    // Keep the text, change the element to p
+    // Keep the text, but remove the element
     errors.push(createTagError(element, 'none'));
-    element.name = 'p';
-    element.attributes = undefined;
-    return false;
+    if (element.elements) {
+      parent.elements.splice(index, 1, ...element.elements);
+    } else {
+      parent.elements.splice(index, 1);
+    }
+    return true;
   }
 
   // name and intensity are the supported attributes
@@ -125,11 +128,14 @@ const check_amazon_emotion = (parent, index, errors, element, platform, locale) 
 const check_amazon_domain = (parent, index, errors, element, platorm, locale) => {
   // This tag is only valid for en-US or en-AU
   if ((locale !== 'en-US') && (locale !== 'en-AU')) {
-    // Keep the text, change the element to p
+    // Keep the text, but remove the element
     errors.push(createTagError(element, 'none'));
-    element.name = 'p';
-    element.attributes = undefined;
-    return false;
+    if (element.elements) {
+      parent.elements.splice(index, 1, ...element.elements);
+    } else {
+      parent.elements.splice(index, 1);
+    }
+    return true;
   }
 
   // name field is required and can be news or music
