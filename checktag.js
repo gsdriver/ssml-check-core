@@ -9,6 +9,7 @@ function createTagError(element, attribute, undefinedValue) {
   error.tag = element.name;
   error.attribute = attribute;
   error.value = (undefinedValue || !element.attributes) ? undefined : element.attributes[attribute];
+
   return error;
 }
 
@@ -120,6 +121,41 @@ const check_amazon_emotion = (parent, index, errors, element, platform, locale) 
     errors.push(createTagError(element, 'none'));
     element.attributes.name = element.attributes.name || 'excited';
     element.attributes.intensity = element.attributes.intensity || 'medium';
+  }
+
+  return false;
+};
+
+const check_alexa_name = (parent, index, errors, element, platform, locale) => {
+  // If a alexa:name tag is available it must have an attribute type with value 'first' and an attribute personId
+  const attributes = Object.keys(element.attributes || {});
+  attributes.forEach((attribute) => {
+    if (attribute === 'type') {
+      if (['first'].indexOf(element.attributes.type) === -1) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.type = 'first';
+      }
+    } else if (attribute === 'personId') {
+      if ((element.attributes.personId).indexOf('amzn1.ask.person.') === -1) {
+        errors.push(createTagError(element, attribute));
+      }
+    } else {
+      // Invalid attribute
+      errors.push(createTagError(element, attribute, true));
+      element.attributes[attribute] = undefined;
+    }
+  });
+
+  // Also, type is required
+  if (attributes.indexOf('type') === -1) {
+    errors.push(createTagError(element, 'missing type'));
+    element.attributes = {type: 'first'};
+  }
+
+  // Also, personId is required
+  if (attributes.indexOf('personId') === -1) {
+    errors.push(createTagError(element, 'missing personId'));
+    element.attributes = {personId: 'amzn1.ask.person.ABCD'};
   }
 
   return false;
@@ -593,6 +629,7 @@ const check_w = (parent, index, errors, element, platform, locale) => {
 
 module.exports = {
   check_amazon_effect,
+  check_alexa_name,
   check_amazon_emotion,
   check_amazon_domain,
   check_audio,

@@ -59,6 +59,16 @@ const promises = [];
 
 promises.push(runTest('Simple SSML', '<speak>Simple test</speak>', null, 'valid'));
 
+
+// Amazon alexa:name test
+promises.push(runTest('alexa:name test', '<speak>Hi <alexa:name type="first" personId="amzn1.ask.person.ABCDEF"/> nice to meet you!</speak>', {platform: 'amazon'}, 'valid'));
+promises.push(runTest('alexa:name test (invalid type)', '<speak>Hi <alexa:name type="last" personId="amzn1.ask.person.ABCDEF"/> nice to meet you!</speak>', {platform: 'amazon'}, 'alexa:name tag has invalid type value last'));
+promises.push(runTest('alexa:name test (invalid persomId)', '<speak>Hi <alexa:name type="first" personId="none"/> nice to meet you!</speak>', {platform: 'amazon'}, 'alexa:name tag has invalid personId value none'));
+promises.push(runTest('alexa:name test (invalid persomId)', '<speak>Hi <alexa:name type="first" personId=""/> nice to meet you!</speak>', {platform: 'amazon'}, 'alexa:name tag has invalid attribute personId'));
+promises.push(runTest('alexa:name test (missing type)', '<speak>Hi <alexa:name personId="amzn1.ask.person.ABCDEF"/> nice to meet you!</speak>', {platform: 'amazon'}, 'alexa:name tag has invalid attribute missing type'));
+promises.push(runTest('alexa:name test (missing personId)', '<speak>Hi <alexa:name type="first"/> nice to meet you!</speak>', {platform: 'amazon'}, 'alexa:name tag has invalid attribute missing personId'));
+promises.push(runTest('alexa:name test (missing type and personId)', '<speak>Hi <alexa:name /> nice to meet you!</speak>', {platform: 'amazon'}, 'alexa:name tag has invalid attribute missing typealexa:name tag has invalid attribute missing personId'));
+
 // Whisper tests
 promises.push(runTest('Whisper effect', '<speak><amazon:effect name="whispered">Simple test <break strength="medium"/> code</amazon:effect></speak>', {platform: 'amazon'}, 'valid'));
 promises.push(runTest('Whisper effect', '<speak><amazon:effect name="whispering">Simple test <break strength="medium"/> code</amazon:effect></speak>', {platform: 'amazon'}, 'amazon:effect tag has invalid name value whispering'));

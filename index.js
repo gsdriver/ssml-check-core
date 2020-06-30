@@ -58,7 +58,7 @@ function removeExtraAudio(element) {
 
 function checkForValidTagsRecursive(parent, index, errors, element, platform, locale) {
   const validTags = ['audio', 'break', 'emphasis', 'p', 'prosody', 's', 'say-as', 'speak', 'sub'];
-  const validAmazonTags = ['amazon:effect', 'amazon:emotion', 'amazon:domain', 'lang', 'phoneme', 'voice', 'w'];
+  const validAmazonTags = ['amazon:effect', 'amazon:emotion', 'amazon:domain', 'lang', 'phoneme', 'voice', 'w', 'alexa:name'];
   const validGoogleTags = ['par', 'seq', 'media', 'desc'];
   let removedTag;
 
