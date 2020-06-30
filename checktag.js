@@ -58,7 +58,7 @@ function numberInRange(text, min, max, defaultValue) {
 // Set of functions that check individual tags
 //
 
-const check_amazon_effect = (parent, index, errors, element, platform) => {
+const check_amazon_effect = (parent, index, errors, element, platform, locale) => {
   // Must be name attribute with whispered value
   const attributes = Object.keys(element.attributes || {});
   attributes.forEach((attribute) => {
@@ -78,6 +78,49 @@ const check_amazon_effect = (parent, index, errors, element, platform) => {
   if (attributes.length === 0) {
     errors.push(createTagError(element, 'none'));
     element.attributes = {name: 'whispered'};
+  }
+
+  return false;
+};
+
+const check_amazon_emotion = (parent, index, errors, element, platform, locale) => {
+  // This tag is only valid for en-US
+  if (locale !== 'en-US') {
+    // Keep the text, but remove the element
+    errors.push(createTagError(element, 'none'));
+    if (element.elements) {
+      parent.elements.splice(index, 1, ...element.elements);
+    } else {
+      parent.elements.splice(index, 1);
+    }
+    return true;
+  }
+
+  // name and intensity are the supported attributes
+  const attributes = Object.keys(element.attributes || {});
+  attributes.forEach((attribute) => {
+    if (attribute === 'name') {
+      if (['excited', 'disappointed'].indexOf(element.attributes.name) === -1) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.name = 'excited';
+      }
+    } else if (attribute === 'intensity') {
+      if (['low', 'medium', 'high'].indexOf(element.attributes.intensity) === -1) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.intensity = 'medium';
+      }
+    } else {
+      // Invalid attribute
+      errors.push(createTagError(element, attribute, true));
+      element.attributes[attribute] = undefined;
+    }
+  });
+
+  // Also, name and intensity are both required
+  if (attributes.length !== 2) {
+    errors.push(createTagError(element, 'none'));
+    element.attributes.name = element.attributes.name || 'excited';
+    element.attributes.intensity = element.attributes.intensity || 'medium';
   }
 
   return false;
@@ -118,7 +161,43 @@ const check_alexa_name = (parent, index, errors, element, platform, locale) => {
   return false;
 };
 
-const check_audio = (parent, index, errors, element, platform) => {
+const check_amazon_domain = (parent, index, errors, element, platorm, locale) => {
+  // This tag is only valid for en-US or en-AU
+  if ((locale !== 'en-US') && (locale !== 'en-AU')) {
+    // Keep the text, but remove the element
+    errors.push(createTagError(element, 'none'));
+    if (element.elements) {
+      parent.elements.splice(index, 1, ...element.elements);
+    } else {
+      parent.elements.splice(index, 1);
+    }
+    return true;
+  }
+
+  // name field is required and can be news or music
+  const attributes = Object.keys(element.attributes || {});
+  attributes.forEach((attribute) => {
+    if (attribute === 'name') {
+      const allowedValues = (locale == 'en-US') ? ['news', 'music'] : ['news'];
+      if (allowedValues.indexOf(element.attributes.name) === -1) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.name = 'news';
+      }
+    } else {
+      // Invalid attribute
+      errors.push(createTagError(element, attribute, true));
+      element.attributes[attribute] = undefined;
+    }
+  });
+
+  // Also, name is required
+  if (attributes.length === 0) {
+    errors.push(createTagError(element, 'none'));
+    element.attributes = {name: 'news'};
+  }
+};
+
+const check_audio = (parent, index, errors, element, platform, locale) => {
   const attributes = Object.keys(element.attributes || {});
   let removed;
 
@@ -174,7 +253,7 @@ const check_audio = (parent, index, errors, element, platform) => {
   return removed;
 };
 
-const check_break = (parent, index, errors, element, platform) => {
+const check_break = (parent, index, errors, element, platform, locale) => {
   const attributes = Object.keys(element.attributes || {});
   // Attribute must be time or strength
   attributes.forEach((attribute) => {
@@ -205,7 +284,7 @@ const check_break = (parent, index, errors, element, platform) => {
   return false;
 };
 
-const check_desc = (parent, index, errors, element, platform) => {
+const check_desc = (parent, index, errors, element, platform, locale) => {
   // Desc is valid as part of an audio tag on Google
   let removed;
   if (!parent || (parent.name !== 'audio')) {
@@ -218,7 +297,7 @@ const check_desc = (parent, index, errors, element, platform) => {
   return removed;
 };
 
-const check_emphasis = (parent, index, errors, element, platform) => {
+const check_emphasis = (parent, index, errors, element, platform, locale) => {
   const attributes = Object.keys(element.attributes || {});
 
   // Must be level attribute
@@ -248,7 +327,7 @@ const check_emphasis = (parent, index, errors, element, platform) => {
   return false;
 };
 
-const check_lang = (parent, index, errors, element, platform) => {
+const check_lang = (parent, index, errors, element, platform, locale) => {
   const attributes = Object.keys(element.attributes || {});
 
   // Must be xml:lang attribute
@@ -275,7 +354,7 @@ const check_lang = (parent, index, errors, element, platform) => {
   return false;
 };
 
-const check_media = (parent, index, errors, element, platform) => {
+const check_media = (parent, index, errors, element, platform, locale) => {
   const attributes = Object.keys(element.attributes || {});
   attributes.forEach((attribute) => {
     if (attribute === 'xml:id') {
@@ -330,7 +409,7 @@ const check_media = (parent, index, errors, element, platform) => {
   return false;
 };
 
-const check_p = (parent, index, errors, element, platform) => {
+const check_p = (parent, index, errors, element, platform, locale) => {
   const attributes = Object.keys(element.attributes || {});
 
   // No attributes allowed
@@ -344,7 +423,7 @@ const check_p = (parent, index, errors, element, platform) => {
 
 const check_s = check_p;
 
-const check_par = (parent, index, errors, element, platform) => {
+const check_par = (parent, index, errors, element, platform, locale) => {
   // These elements house other par, seq, or media elements
   if (element.elements) {
     let i;
@@ -365,7 +444,7 @@ const check_par = (parent, index, errors, element, platform) => {
 
 const check_seq = check_par;
 
-const check_phoneme = (parent, index, errors, element, platform) => {
+const check_phoneme = (parent, index, errors, element, platform, locale) => {
   const attributes = Object.keys(element.attributes || {});
   attributes.forEach((attribute) => {
     if (attribute === 'alphabet') {
@@ -384,7 +463,7 @@ const check_phoneme = (parent, index, errors, element, platform) => {
   return false;
 };
 
-const check_prosody = (parent, index, errors, element, platform) => {
+const check_prosody = (parent, index, errors, element, platform, locale) => {
   const attributes = Object.keys(element.attributes || {});
   attributes.forEach((attribute) => {
     if (attribute === 'rate') {
@@ -428,7 +507,7 @@ const check_prosody = (parent, index, errors, element, platform) => {
   return false;
 };
 
-const check_say_as = (parent, index, errors, element, platform) => {
+const check_say_as = (parent, index, errors, element, platform, locale) => {
   const attributes = Object.keys(element.attributes || {});
   // Attribute must be interpret-as or format
   attributes.forEach((attribute) => {
@@ -487,7 +566,7 @@ const check_say_as = (parent, index, errors, element, platform) => {
   return false;
 };
 
-const check_sub = (parent, index, errors, element, platform) => {
+const check_sub = (parent, index, errors, element, platform, locale) => {
   const attributes = Object.keys(element.attributes || {});
   // alias is optional
   attributes.forEach((attribute) => {
@@ -501,11 +580,11 @@ const check_sub = (parent, index, errors, element, platform) => {
   return false;
 };
 
-const check_speak = (parent, index, errors, element, platform) => {
+const check_speak = (parent, index, errors, element, platform, locale) => {
   return false;
 };
 
-const check_voice = (parent, index, errors, element, platform) => {
+const check_voice = (parent, index, errors, element, platform, locale) => {
   const attributes = Object.keys(element.attributes || {});
   // Attribute must be name
   attributes.forEach((attribute) => {
@@ -528,7 +607,7 @@ const check_voice = (parent, index, errors, element, platform) => {
   return false;
 };
 
-const check_w = (parent, index, errors, element, platform) => {
+const check_w = (parent, index, errors, element, platform, locale) => {
   const attributes = Object.keys(element.attributes || {});
   // Attribute must be role
   attributes.forEach((attribute) => {
@@ -551,6 +630,8 @@ const check_w = (parent, index, errors, element, platform) => {
 module.exports = {
   check_amazon_effect,
   check_alexa_name,
+  check_amazon_emotion,
+  check_amazon_domain,
   check_audio,
   check_break,
   check_desc,

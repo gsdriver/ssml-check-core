@@ -56,9 +56,9 @@ function removeExtraAudio(element) {
   removeExtraAudioRecursive(null, 0, element, 0);
 }
 
-function checkForValidTagsRecursive(parent, index, errors, element, platform) {
+function checkForValidTagsRecursive(parent, index, errors, element, platform, locale) {
   const validTags = ['audio', 'break', 'emphasis', 'p', 'prosody', 's', 'say-as', 'speak', 'sub'];
-  const validAmazonTags = ['amazon:effect', 'lang', 'phoneme', 'voice', 'w', 'alexa:name'];
+  const validAmazonTags = ['amazon:effect', 'amazon:emotion', 'amazon:domain', 'lang', 'phoneme', 'voice', 'w', 'alexa:name'];
   const validGoogleTags = ['par', 'seq', 'media', 'desc'];
   let removedTag;
 
@@ -75,7 +75,7 @@ function checkForValidTagsRecursive(parent, index, errors, element, platform) {
       removedTag = true;
     } else {
       const funcName = 'check_' + element.name.replace(/:|-/g, '_');
-      removedTag = checktag[funcName](parent, index, errors, element, platform);
+      removedTag = checktag[funcName](parent, index, errors, element, platform, locale);
     }
   }
 
@@ -83,7 +83,7 @@ function checkForValidTagsRecursive(parent, index, errors, element, platform) {
     let i;
     let removed;
     for (i = 0; i < element.elements.length; i++) {
-      removed = checkForValidTagsRecursive(element, i, errors, element.elements[i], platform);
+      removed = checkForValidTagsRecursive(element, i, errors, element.elements[i], platform, locale);
       if (removed) {
         // Decrement i since an item was removed
         i--;
@@ -94,8 +94,8 @@ function checkForValidTagsRecursive(parent, index, errors, element, platform) {
   return removedTag;
 }
 
-function checkForValidTags(errors, json, platform) {
-  checkForValidTagsRecursive(json, 0, errors, json.elements[0], platform);
+function checkForValidTags(errors, json, platform, locale) {
+  checkForValidTagsRecursive(json, 0, errors, json.elements[0], platform, locale);
 }
 
 function checkInternal(ssml, options, fix) {
@@ -140,7 +140,7 @@ function checkInternal(ssml, options, fix) {
     }
 
     // Make sure only valid tags are present
-    checkForValidTags(errors, result, userOptions.platform);
+    checkForValidTags(errors, result, userOptions.platform, userOptions.locale);
 
     // Count the audio files - is it more than 5?
     // This isn't allowed for Amazon

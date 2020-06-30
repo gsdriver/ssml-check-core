@@ -22,8 +22,10 @@ The options structure is composed of the following fields with the following def
 
 ```
 {
-  platform:all,     // The voice platform to evaluate this SSML against.
+  platform: 'all',     // The voice platform to evaluate this SSML against.
                     // Valid values are "all", "amazon", or "google".
+  locale:undefined, // The locale you want to check against, used for certain
+                    // locale-specific attributes like amazon:emotion
 }
 ```
 
