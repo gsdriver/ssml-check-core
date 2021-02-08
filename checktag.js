@@ -58,14 +58,169 @@ function numberInRange(text, min, max, defaultValue) {
 // Set of functions that check individual tags
 //
 
-const check_amazon_effect = (parent, index, errors, element, platform, locale) => {
-  // Must be name attribute with whispered value
+const check_alexa_name = (parent, index, errors, element, platform, locale) => {
+  // If a alexa:name tag is available it must have an attribute type with value 'first' and an attribute personId
+  const attributes = Object.keys(element.attributes || {});
+  attributes.forEach((attribute) => {
+    if (attribute === 'type') {
+      if (['first'].indexOf(element.attributes.type) === -1) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.type = 'first';
+      }
+    } else if (attribute === 'personId') {
+      if ((element.attributes.personId).indexOf('amzn1.ask.person.') === -1) {
+        errors.push(createTagError(element, attribute));
+      }
+    } else {
+      // Invalid attribute
+      errors.push(createTagError(element, attribute, true));
+      element.attributes[attribute] = undefined;
+    }
+  });
+
+  // Also, type is required
+  if (attributes.indexOf('type') === -1) {
+    errors.push(createTagError(element, 'missing type'));
+    element.attributes = {type: 'first'};
+  }
+
+  // Also, personId is required
+  if (attributes.indexOf('personId') === -1) {
+    errors.push(createTagError(element, 'missing personId'));
+    element.attributes = {personId: 'amzn1.ask.person.ABCD'};
+  }
+
+  return false;
+};
+
+const check_amazon_auto_breaths = (parent, index, errors, element, platform, locale) => {
+  const attributes = Object.keys(element.attributes || {});
+
+  // Valid attributes are duration, frequency and volume
+  attributes.forEach((attribute) => {
+    if (attribute === 'duration') {
+      if (['default', 'x-short', 'short', 'medium', 'long', 'x-long']
+        .indexOf(element.attributes.duration) === -1) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.duration = 'medium';
+      }
+    } else if (attribute === 'volume') {
+      if (['default', 'x-soft', 'soft', 'medium', 'loud', 'x-loud']
+        .indexOf(element.attributes.volume) === -1) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.volume = 'medium';
+      }
+    } else if (attribute === 'frequency') {
+      if (['default', 'x-low', 'low', 'medium', 'high', 'x-high']
+        .indexOf(element.attributes.frequency) === -1) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.frequncy = 'medium';
+      }
+    } else {
+      // Invalid attribute
+      errors.push(createTagError(element, attribute, true));
+      element.attributes[attribute] = undefined;
+    }
+  });
+
+  return false;
+};
+
+const check_amazon_breath = (parent, index, errors, element, platform, locale) => {
+  const attributes = Object.keys(element.attributes || {});
+
+  // Valid attributes are duration and volume
+  attributes.forEach((attribute) => {
+    if (attribute === 'duration') {
+      if (['default', 'x-short', 'short', 'medium', 'long', 'x-long']
+        .indexOf(element.attributes.duration) === -1) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.duration = 'medium';
+      }
+    } else if (attribute === 'volume') {
+      if (['default', 'x-soft', 'soft', 'medium', 'loud', 'x-loud']
+        .indexOf(element.attributes.volume) === -1) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.volume = 'medium';
+      }
+    } else {
+      // Invalid attribute
+      errors.push(createTagError(element, attribute, true));
+      element.attributes[attribute] = undefined;
+    }
+  });
+
+  return false;
+};
+
+const check_amazon_domain = (parent, index, errors, element, platorm, locale) => {
+  // This tag is only valid for en-US, de-DE, en-GB, en-CA, en-AU, and jp-JP
+  if (['en-US', 'en-GB', 'jp-JP', 'de-DE', 'en-CA', 'en-AU'].indexOf(locale) === -1) {
+    // Keep the text, but remove the element
+    errors.push(createTagError(element, 'none'));
+    if (element.elements) {
+      parent.elements.splice(index, 1, ...element.elements);
+    } else {
+      parent.elements.splice(index, 1);
+    }
+    return true;
+  }
+
+  // name field is required and can be news or music
   const attributes = Object.keys(element.attributes || {});
   attributes.forEach((attribute) => {
     if (attribute === 'name') {
-      if (['whispered'].indexOf(element.attributes.name) === -1) {
+      const allowedValues = {
+        conversational: ['en-US', 'jp-JP'],
+        'long-form': ['en-US'],
+        music: ['de-DE', 'en-US', 'en-CA', 'en-GB'],
+        news: ['en-US', 'en-AU'],
+        fun: ['jp-JP'],
+      };
+
+      if (!allowedValues[element.attributes.name] || (allowedValues[element.attributes.name].indexOf(locale) === -1)) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.name = 'news';
+      }
+    } else {
+      // Invalid attribute
+      errors.push(createTagError(element, attribute, true));
+      element.attributes[attribute] = undefined;
+    }
+  });
+
+  // Also, name is required
+  if (attributes.length === 0) {
+    errors.push(createTagError(element, 'none'));
+    element.attributes = {name: 'news'};
+  }
+};
+
+const check_amazon_effect = (parent, index, errors, element, platform, locale) => {
+  const attributes = Object.keys(element.attributes || {});
+  attributes.forEach((attribute) => {
+    if (attribute === 'name') {
+      if (['drc', 'whispered'].indexOf(element.attributes.name) === -1) {
         errors.push(createTagError(element, attribute));
         element.attributes.name = 'whispered';
+      }
+    } else if (attribute === 'phonation') {
+      if (['soft'].indexOf(element.attributes.phonation) === -1) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.phonation = 'soft';
+      }
+    } else if (attribute === 'vocal-tract-length') {
+      // Value can be between -50% and +100%, or an absolute value percentage
+      const match = element.attributes['vocal-tract-length'].match(/([\+|\-]?)(\d+)%/);
+      if (!match) {
+        errors.push(createTagError(element, attribute));
+        element.attributes['vocal-tract-length'] = '+100%';
+      } else if (match[1].length) {
+        const range = numberInRange(`${match[1]}${match[2]}`, -50, 100, undefined);
+        if (!range.inRange) {
+          errors.push(createTagError(element, attribute));
+          element.attributes['vocal-tract-length'] = `${range.value > 0 ? '+' : ''}${range.value}%`;
+        }
       }
     } else {
       // Invalid attribute
@@ -84,8 +239,8 @@ const check_amazon_effect = (parent, index, errors, element, platform, locale) =
 };
 
 const check_amazon_emotion = (parent, index, errors, element, platform, locale) => {
-  // This tag is only valid for en-US
-  if (locale !== 'en-US') {
+  // This tag is only valid for en-US, en-GB, and jp-JP
+  if (['en-US', 'en-GB', 'jp-JP'].indexOf(locale) === -1) {
     // Keep the text, but remove the element
     errors.push(createTagError(element, 'none'));
     if (element.elements) {
@@ -124,77 +279,6 @@ const check_amazon_emotion = (parent, index, errors, element, platform, locale) 
   }
 
   return false;
-};
-
-const check_alexa_name = (parent, index, errors, element, platform, locale) => {
-  // If a alexa:name tag is available it must have an attribute type with value 'first' and an attribute personId
-  const attributes = Object.keys(element.attributes || {});
-  attributes.forEach((attribute) => {
-    if (attribute === 'type') {
-      if (['first'].indexOf(element.attributes.type) === -1) {
-        errors.push(createTagError(element, attribute));
-        element.attributes.type = 'first';
-      }
-    } else if (attribute === 'personId') {
-      if ((element.attributes.personId).indexOf('amzn1.ask.person.') === -1) {
-        errors.push(createTagError(element, attribute));
-      }
-    } else {
-      // Invalid attribute
-      errors.push(createTagError(element, attribute, true));
-      element.attributes[attribute] = undefined;
-    }
-  });
-
-  // Also, type is required
-  if (attributes.indexOf('type') === -1) {
-    errors.push(createTagError(element, 'missing type'));
-    element.attributes = {type: 'first'};
-  }
-
-  // Also, personId is required
-  if (attributes.indexOf('personId') === -1) {
-    errors.push(createTagError(element, 'missing personId'));
-    element.attributes = {personId: 'amzn1.ask.person.ABCD'};
-  }
-
-  return false;
-};
-
-const check_amazon_domain = (parent, index, errors, element, platorm, locale) => {
-  // This tag is only valid for en-US or en-AU
-  if ((locale !== 'en-US') && (locale !== 'en-AU')) {
-    // Keep the text, but remove the element
-    errors.push(createTagError(element, 'none'));
-    if (element.elements) {
-      parent.elements.splice(index, 1, ...element.elements);
-    } else {
-      parent.elements.splice(index, 1);
-    }
-    return true;
-  }
-
-  // name field is required and can be news or music
-  const attributes = Object.keys(element.attributes || {});
-  attributes.forEach((attribute) => {
-    if (attribute === 'name') {
-      const allowedValues = (locale == 'en-US') ? ['news', 'music'] : ['news'];
-      if (allowedValues.indexOf(element.attributes.name) === -1) {
-        errors.push(createTagError(element, attribute));
-        element.attributes.name = 'news';
-      }
-    } else {
-      // Invalid attribute
-      errors.push(createTagError(element, attribute, true));
-      element.attributes[attribute] = undefined;
-    }
-  });
-
-  // Also, name is required
-  if (attributes.length === 0) {
-    errors.push(createTagError(element, 'none'));
-    element.attributes = {name: 'news'};
-  }
 };
 
 const check_audio = (parent, index, errors, element, platform, locale) => {
@@ -354,6 +438,27 @@ const check_lang = (parent, index, errors, element, platform, locale) => {
   return false;
 };
 
+const check_mark = (parent, index, errors, element, platform, locale) => {
+  const attributes = Object.keys(element.attributes || {});
+
+  // Only the name field is recognized and is required
+  attributes.forEach((attribute) => {
+    if (attribute !== 'name') {
+      // Invalid attribute
+      errors.push(createTagError(element, attribute, true));
+      element.attributes[attribute] = undefined;
+    }
+  });
+
+  // Also, name is required
+  if (attributes.length === 0) {
+    errors.push(createTagError(element, 'none'));
+    element.attributes = {name: 'mark'};
+  }
+
+  return false;
+};
+
 const check_media = (parent, index, errors, element, platform, locale) => {
   const attributes = Object.keys(element.attributes || {});
   attributes.forEach((attribute) => {
@@ -497,6 +602,12 @@ const check_prosody = (parent, index, errors, element, platform, locale) => {
           element.attributes.volume = '+0dB';
         }
       }
+    } else if ((attribute === 'amazon:max-duration') && (platform === 'amazon')) {
+      // Needs to be a valid duration
+      if (readDuration(element.attributes['amazon:max-duration'], platform, undefined) === undefined) {
+        errors.push(createTagError(element, attribute));
+        element.attributes['amazon:max-duration'] = '2s';
+      }
     } else {
       // Invalid attribute
       errors.push(createTagError(element, attribute, true));
@@ -628,15 +739,18 @@ const check_w = (parent, index, errors, element, platform, locale) => {
 };
 
 module.exports = {
-  check_amazon_effect,
   check_alexa_name,
-  check_amazon_emotion,
+  check_amazon_auto_breaths,
+  check_amazon_breath,
   check_amazon_domain,
+  check_amazon_effect,
+  check_amazon_emotion,
   check_audio,
   check_break,
   check_desc,
   check_emphasis,
   check_lang,
+  check_mark,
   check_media,
   check_p,
   check_par,

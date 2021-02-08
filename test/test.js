@@ -20,6 +20,8 @@ function runTest(testName, ssml, options, expectedResult) {
             result += value.attribute + ' value ' + value.value;
           } else if (value.attribute) {
             result += 'attribute ' + value.attribute;
+          } else {
+            result += 'thing';
           }
         } else {
           result = value.type;
@@ -69,16 +71,27 @@ promises.push(runTest('alexa:name test (missing type)', '<speak>Hi <alexa:name p
 promises.push(runTest('alexa:name test (missing personId)', '<speak>Hi <alexa:name type="first"/> nice to meet you!</speak>', {platform: 'amazon'}, 'alexa:name tag has invalid attribute missing personId'));
 promises.push(runTest('alexa:name test (missing type and personId)', '<speak>Hi <alexa:name /> nice to meet you!</speak>', {platform: 'amazon'}, 'alexa:name tag has invalid attribute missing typealexa:name tag has invalid attribute missing personId'));
 
-// Whisper tests
+// Amazon effect tests
 promises.push(runTest('Whisper effect', '<speak><amazon:effect name="whispered">Simple test <break strength="medium"/> code</amazon:effect></speak>', {platform: 'amazon'}, 'valid'));
 promises.push(runTest('Whisper effect', '<speak><amazon:effect name="whispering">Simple test <break strength="medium"/> code</amazon:effect></speak>', {platform: 'amazon'}, 'amazon:effect tag has invalid name value whispering'));
+promises.push(runTest('Phonation', '<speak><amazon:effect name="drc" phonation="soft">Simple test with phonation<break strength="medium"/> code</amazon:effect></speak>', {platform: 'amazon'}, 'valid'));
+promises.push(runTest('Invalid Phonation', '<speak><amazon:effect name="drc" phonation="softly">Simple test with phonation<break strength="medium"/> code</amazon:effect></speak>', {platform: 'amazon'}, 'amazon:effect tag has invalid phonation value softly'));
+promises.push(runTest('Vocal tract negative', '<speak><amazon:effect name="whispered" vocal-tract-length="-20%">Simple test with lower vocal tract length<break strength="medium"/> code</amazon:effect></speak>', {platform: 'amazon'}, 'valid'));
+promises.push(runTest('Vocal tract positive', '<speak><amazon:effect name="whispered" vocal-tract-length="+20%">Simple test with higher vocal tract length<break strength="medium"/> code</amazon:effect></speak>', {platform: 'amazon'}, 'valid'));
+promises.push(runTest('Vocal tract out of range', '<speak><amazon:effect name="whispered" vocal-tract-length="-70%">Simple test with lower vocal tract length<break strength="medium"/> code</amazon:effect></speak>', {platform: 'amazon'}, 'amazon:effect tag has invalid vocal-tract-length value -70%'));
+promises.push(runTest('Vocal tract absolute', '<speak><amazon:effect name="whispered" vocal-tract-length="200%">Simple test<break strength="medium"/> code</amazon:effect></speak>', {platform: 'amazon'}, 'valid'));
+promises.push(runTest('Vocal tract invalid attribute', '<speak><amazon:effect name="whispered" vocal-tract-length="200s">Simple test<break strength="medium"/> code</amazon:effect></speak>', {platform: 'amazon'}, 'amazon:effect tag has invalid vocal-tract-length value 200s'));
+promises.push(runTest('Invalid Platform with amazon:effect', '<speak><amazon:effect name="drc" phonation="soft">Simple test with phonation<break strength="medium"/> code</amazon:effect></speak>', null, 'amazon:effect tag has invalid thing'));
 
 // Amazon:emotion and amazom:domain
 promises.push(runTest('Valid emotion', '<speak><amazon:emotion name="excited" intensity="medium">Christina wins this round!</amazon:emotion></speak>', {platform: 'amazon', locale: 'en-US'}, 'valid'));
 promises.push(runTest('Valid emotion', '<speak><amazon:emotion name="disappointed" intensity="high">Here I am with a brain the size of a planet and they ask me to pick up a piece of paper.</amazon:emotion></speak>', {platform: 'amazon', locale: 'en-US'}, 'valid'));
-promises.push(runTest('Invalid locale', '<speak><amazon:emotion name="excited" intensity="medium">Christina wins this round!</amazon:emotion></speak>', {platform: 'amazon', locale: 'en-GB'}, 'amazon:emotion tag has invalid attribute none'));
+promises.push(runTest('Invalid locale', '<speak><amazon:emotion name="excited" intensity="medium">Christina wins this round!</amazon:emotion></speak>', {platform: 'amazon', locale: 'de-DE'}, 'amazon:emotion tag has invalid attribute none'));
 promises.push(runTest('Valid domain', '<speak><amazon:domain name="news">TA miniature manuscript written by the teenage Charlotte Bronte is returning to her childhood home in West Yorkshire after it was bought by a British museum at auction in Paris. </amazon:domain></speak>', {platform: 'amazon', locale: 'en-AU'}, 'valid'));
 promises.push(runTest('Invalid locale', '<speak><amazon:domain name="music">Sweet Child O’ Mine by Guns N’ Roses became one of their most successful singles, topping the billboard Hot 100 in 1988. Slash’s guitar solo on this song was ranked the 37th greatest solo of all time. Here’s Sweet Child O’ Mine. </amazon:domain></speak>', {platform: 'amazon', locale: 'en-AU'}, 'amazon:domain tag has invalid name value music'));
+promises.push(runTest('Valid locale', '<speak><amazon:domain name="long-form">Sweet Child O’ Mine by Guns N’ Roses became one of their most successful singles, topping the billboard Hot 100 in 1988. Slash’s guitar solo on this song was ranked the 37th greatest solo of all time. Here’s Sweet Child O’ Mine. </amazon:domain></speak>', {platform: 'amazon', locale: 'en-US'}, 'valid'));
+promises.push(runTest('Invalid locale', '<speak><amazon:domain name="long-form">Sweet Child O’ Mine by Guns N’ Roses became one of their most successful singles, topping the billboard Hot 100 in 1988. Slash’s guitar solo on this song was ranked the 37th greatest solo of all time. Here’s Sweet Child O’ Mine. </amazon:domain></speak>', {platform: 'amazon', locale: 'en-AU'}, 'amazon:domain tag has invalid name value long-form'));
+promises.push(runTest('Valid locale', '<speak><amazon:domain name="fun">Sweet Child O’ Mine by Guns N’ Roses became one of their most successful singles, topping the billboard Hot 100 in 1988. Slash’s guitar solo on this song was ranked the 37th greatest solo of all time. Here’s Sweet Child O’ Mine. </amazon:domain></speak>', {platform: 'amazon', locale: 'jp-JP'}, 'valid'));
 
 // Audio tests
 promises.push(runTest('Valid audio', '<speak><audio src="foo.mp3" clipBegin="2.2s" clipEnd="3000ms" repeatCount="3"/> You like that?</speak>', {platform: 'google', locale: 'de-DE'}, 'valid'));
@@ -86,13 +99,26 @@ promises.push(runTest('Invalid Amazon audio', '<speak><audio src="foo.mp3" clipB
 promises.push(runTest('Valid Google OOG', '<speak><audio speed="80%" soundLevel="-20.5dB" src="https://actions.google.com/sounds/v1/animals/cat_purr_close.ogg"><desc>a cat purring</desc>PURR (sound didn\'t load)</audio></speak>', {platform: 'google'}, 'valid'));
 promises.push(runTest('Invalid Google speed', '<speak><audio speed="40%" src="https://actions.google.com/sounds/v1/animals/cat_purr_close.ogg"><desc>a cat purring</desc>PURR (sound didn\'t load)</audio></speak>', {platform: 'google'}, 'audio tag has invalid speed value 40%'));
 promises.push(runTest('Invalid Google sound level', '<speak><audio soundLevel="+50dB" src="https://actions.google.com/sounds/v1/animals/cat_purr_close.ogg"><desc>a cat purring</desc>PURR (sound didn\'t load)</audio></speak>', {platform: 'google'}, 'audio tag has invalid soundLevel value +50dB'));
-promises.push(runTest('Stray desc', '<speak><desc>Some Text</desc></speak>', {platform: 'google'}, 'desc tag has invalid '));
+promises.push(runTest('Stray desc', '<speak><desc>Some Text</desc></speak>', {platform: 'google'}, 'desc tag has invalid thing'));
 
 // Break tests
 promises.push(runTest('With break', '<speak>You lost <break time="200ms"/> Getting used to losing?  Take a break and come back tomorrow</speak>', null, 'valid'));
 promises.push(runTest('With break in seconds', '<speak>You lost <break time="2.5s"/> Getting used to losing?  Take a break and come back tomorrow</speak>', null, 'valid'));
 promises.push(runTest('Break with bad attribute', '<speak>You lost <break tim="200ms"/> Getting used to losing?  Take a break and come back tomorrow</speak>', null, 'break tag has invalid attribute tim'));
 promises.push(runTest('Break with long attribute', '<speak>You lost <break time="200s"/> Getting used to losing?  Take a break and come back tomorrow</speak>', null, 'break tag has invalid time value 200s'));
+
+// Mark tests
+promises.push(runTest('Valid mark', '<speak>Mary had a little <mark name="animal"/>lamb.</speak>', null, 'valid'));
+promises.push(runTest('Invalid mark', '<speak>Mary had a little <mark animal="lamb"/>lamb.</speak>', null, 'mark tag has invalid attribute animal'));
+
+// Breath and auto-breath tests
+promises.push(runTest('Valid breath', '<speak>Sometimes you want to insert only <amazon:breath duration="medium" volume="x-loud"/>a single breath.</speak>', {platform: 'amazon'}, 'valid'));
+promises.push(runTest('Invalid breath values', '<speak>Sometimes you want to insert only <amazon:breath duration="not too long" volume="xxx-loud"/>a single breath.</speak>', {platform: 'amazon'}, 'amazon:breath tag has invalid duration value not too longamazon:breath tag has invalid volume value xxx-loud'));
+promises.push(runTest('Invalid breath attributes', '<speak>Sometimes you want to insert only <amazon:breath duration="medium" loudness="x-loud"/>a single breath.</speak>', {platform: 'amazon'}, 'amazon:breath tag has invalid attribute loudness'));
+promises.push(runTest('Valid auto-breath', '<speak><amazon:auto-breaths>Take a breather in reading this text, even though it\'s not too long it\'s perfectly valid SSML</amazon:auto-breaths></speak>', {platform: 'amazon'}, 'valid'));
+promises.push(runTest('Auto-breath with values', '<speak><amazon:auto-breaths volume="default" frequency="low" duration="long">Take a breather in reading this text, even though it\'s not too long it\'s perfectly valid SSML</amazon:auto-breaths></speak>', {platform: 'amazon'}, 'valid'));
+promises.push(runTest('Invalid Auto-breath values', '<speak><amazon:auto-breaths volume="whatever" frequency="lowest" duration="long">Take a breather in reading this text, even though it\'s not too long it\'s perfectly valid SSML</amazon:auto-breaths></speak>', {platform: 'amazon'}, 'amazon:auto-breaths tag has invalid volume value whateveramazon:auto-breaths tag has invalid frequency value lowest'));
+promises.push(runTest('Invalid auto-breath attributes', '<speak><amazon:auto-breaths name="breathe">Take a breather in reading this text, even though it\'s not too long it\'s perfectly valid SSML</amazon:auto-breaths></speak>', {platform: 'amazon'}, 'amazon:auto-breaths tag has invalid attribute name'));
 
 // Emphasis tests
 promises.push(runTest('Valid emphasis', '<speak>I already told you I <emphasis level="strong">really like</emphasis> that person. </speak>', null, 'valid'));
@@ -128,6 +154,8 @@ promises.push(runTest('Invalid volume', '<speak><prosody volume="xx-large">Hello
 promises.push(runTest('Valid volume dB', '<speak><prosody volume="+4.5dB">Hello world</prosody></speak>', null, 'valid'));
 promises.push(runTest('Invalid volume dB', '<speak><prosody volume="-5.5.5dB">Hello world</prosody></speak>', null, 'prosody tag has invalid volume value -5.5.5dB'));
 promises.push(runTest('Prosody st', '<speak><prosody rate="slow" pitch="-1st">Come in!<break time="0.5"/>Welcome to the terrifying world of the imagination.</prosody></speak>', {platform: 'google'}, 'valid'));
+promises.push(runTest('Prosody amazon max-duration', '<speak><prosody amazon:max-duration="2s">Come in!<break time="0.5s"/>Welcome to the terrifying world of the imagination.</prosody></speak>', {platform: 'amazon'}, 'valid'));
+promises.push(runTest('Prosody amazon max-duration on all platforms', '<speak><prosody amazon:max-duration="2s">Come in!<break time="0.5s"/>Welcome to the terrifying world of the imagination.</prosody></speak>', null, 'prosody tag has invalid attribute amazon:max-duration'));
 
 // say-as tests
 promises.push(runTest('Valid say-as Amazon', '<speak><say-as interpret-as="interjection">Wow</say-as></speak>', {platform: 'amazon'}, 'valid'));
@@ -174,8 +202,10 @@ promises.push(runCorrection('Correct say-as all', '<speak><say-as interpret-as="
 promises.push(runCorrection('Invalid Google speed', '<speak><audio speed="140" src="https://actions.google.com/sounds/v1/animals/cat_purr_close.ogg"><desc>a cat purring</desc>PURR (sound didn\'t load)</audio></speak>', {platform: 'google'}, '<speak><audio speed="140%" src="https://actions.google.com/sounds/v1/animals/cat_purr_close.ogg"><desc>a cat purring</desc>PURR (sound didn\'t load)</audio></speak>'));
 promises.push(runCorrection('Prosody invalid', '<speak><prosody rate="slow" pitch="soft">Come in!<break time="0.5"/>Welcome to the terrifying world of the imagination.</prosody></speak>', {platform: 'google'}, '<speak><prosody rate="slow" pitch="+0%">Come in!<break time="0.5"/>Welcome to the terrifying world of the imagination.</prosody></speak>'));
 promises.push(runCorrection('Invalid tags', '<speak><tag>What is this?<break time="20000ms"/>This & that<foo/><bar> & those</bar></tag></speak>', null, '<speak>What is this?<break time="10s"/>This &amp; that &amp; those</speak>'));
-promises.push(runCorrection('Invalid locale on amazon:emotion', '<speak><amazon:emotion name="excited" intensity="medium">Christina wins this round!</amazon:emotion></speak>', {platform: 'amazon', locale: 'en-GB'}, '<speak>Christina wins this round!</speak>'));
+promises.push(runCorrection('Invalid locale on amazon:emotion', '<speak><amazon:emotion name="excited" intensity="medium">Christina wins this round!</amazon:emotion></speak>', {platform: 'amazon', locale: 'de-DE'}, '<speak>Christina wins this round!</speak>'));
 promises.push(runCorrection('Invalid attribute on amazon:domain', '<speak><amazon:domain name="excited" intensity="medium">Christina wins this round!</amazon:domain></speak>', {platform: 'amazon', locale: 'en-US'}, '<speak><amazon:domain name="news">Christina wins this round!</amazon:domain></speak>'));
+promises.push(runCorrection('Vocal tract out of range', '<speak><amazon:effect name="whispered" vocal-tract-length="-70%">Simple test with lower vocal tract length<break strength="medium"/> code</amazon:effect></speak>', {platform: 'amazon'}, '<speak><amazon:effect name="whispered" vocal-tract-length="-50%">Simple test with lower vocal tract length<break strength="medium"/> code</amazon:effect></speak>'));
+promises.push(runCorrection('Invalid Auto-breath values', '<speak><amazon:auto-breaths volume="whatever" frequency="lowest" duration="long">Take a breather in reading this text, even though it\'s not too long it\'s perfectly valid SSML</amazon:auto-breaths></speak>', {platform: 'amazon'}, '<speak><amazon:auto-breaths volume="medium" frequency="lowest" duration="long" frequncy="medium">Take a breather in reading this text, even though it\'s not too long it\'s perfectly valid SSML</amazon:auto-breaths></speak>'));
 
 // Final summary
 Promise.all(promises).then(() => {
