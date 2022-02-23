@@ -723,7 +723,7 @@ const check_w = (parent, index, errors, element, platform, locale) => {
   // Attribute must be role
   attributes.forEach((attribute) => {
     if (attribute === 'role') {
-      if (['amazon:VB', 'amazon:VBD', 'amazon:NN', 'amazon:SENSE_1']
+      if (['amazon:VB', 'amazon:VBD', 'amazon:NN', 'amazon:DT', 'amazon:IN', 'amazon:JJ', 'amazon:SENSE_1']
         .indexOf(element.attributes.role) === -1) {
         errors.push(createTagError(element, attribute));
         element.attributes.role = 'amazon:VB';
