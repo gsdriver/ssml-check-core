@@ -26,6 +26,8 @@ The options structure is composed of the following fields with the following def
                     // Valid values are "all", "amazon", or "google".
   locale:undefined, // The locale you want to check against, used for certain
                     // locale-specific attributes like amazon:emotion
+  unsupportedTags:undefined, // An array of tags that will be flagged as invalid
+                             // For example, ['prosody']
 }
 ```
 

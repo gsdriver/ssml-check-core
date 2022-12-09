@@ -56,13 +56,20 @@ function removeExtraAudio(element) {
   removeExtraAudioRecursive(null, 0, element, 0);
 }
 
-function checkForValidTagsRecursive(parent, index, errors, element, platform, locale) {
-  const validTags = ['audio', 'break', 'emphasis', 'mark', 'p', 'prosody', 's', 'say-as', 'speak', 'sub'];
-  const validAmazonTags = ['amazon:auto-breaths', 'amazon:breath', 'amazon:effect', 'amazon:emotion', 'amazon:domain', 'lang', 'phoneme', 'voice', 'w', 'alexa:name'];
-  const validGoogleTags = ['par', 'seq', 'media', 'desc'];
+function checkForValidTagsRecursive(parent, index, errors, element, platform, locale, unsupportedTags) {
   let removedTag;
 
   if (element.name) {
+    const validTags = 
+      ['audio', 'break', 'emphasis', 'mark', 'p', 'prosody', 's', 'say-as', 'speak', 'sub']
+      .filter((t) => !unsupportedTags.includes(t));
+    const validAmazonTags = 
+      ['amazon:auto-breaths', 'amazon:breath', 'amazon:effect', 'amazon:emotion', 'amazon:domain', 'lang', 'phoneme', 'voice', 'w', 'alexa:name']
+      .filter((t) => !unsupportedTags.includes(t));
+    const validGoogleTags = 
+      ['par', 'seq', 'media', 'desc']
+      .filter((t) => !unsupportedTags.includes(t));
+
     if ((validTags.indexOf(element.name) === -1) &&
       !(((platform === 'amazon') && (validAmazonTags.indexOf(element.name) !== -1)) ||
       ((platform === 'google') && (validGoogleTags.indexOf(element.name) !== -1)))) {
@@ -83,7 +90,7 @@ function checkForValidTagsRecursive(parent, index, errors, element, platform, lo
     let i;
     let removed;
     for (i = 0; i < element.elements.length; i++) {
-      removed = checkForValidTagsRecursive(element, i, errors, element.elements[i], platform, locale);
+      removed = checkForValidTagsRecursive(element, i, errors, element.elements[i], platform, locale, unsupportedTags);
       if (removed) {
         // Decrement i since an item was removed
         i--;
@@ -94,8 +101,8 @@ function checkForValidTagsRecursive(parent, index, errors, element, platform, lo
   return removedTag;
 }
 
-function checkForValidTags(errors, json, platform, locale) {
-  checkForValidTagsRecursive(json, 0, errors, json.elements[0], platform, locale);
+function checkForValidTags(errors, json, platform, locale, unsupportedTags) {
+  checkForValidTagsRecursive(json, 0, errors, json.elements[0], platform, locale, unsupportedTags);
 }
 
 function checkInternal(ssml, options, fix) {
@@ -105,6 +112,7 @@ function checkInternal(ssml, options, fix) {
     let result;
     const userOptions = options || {};
     userOptions.platform = userOptions.platform || 'all';
+    userOptions.unsupportedTags = userOptions.unsupportedTags || [];
 
     if (['all', 'amazon', 'google'].indexOf(userOptions.platform) === -1) {
       errors.push({type: 'invalid platform'});
@@ -140,7 +148,7 @@ function checkInternal(ssml, options, fix) {
     }
 
     // Make sure only valid tags are present
-    checkForValidTags(errors, result, userOptions.platform, userOptions.locale);
+    checkForValidTags(errors, result, userOptions.platform, userOptions.locale, userOptions.unsupportedTags);
 
     // Count the audio files - is it more than 5?
     // This isn't allowed for Amazon
