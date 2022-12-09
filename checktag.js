@@ -414,11 +414,14 @@ const check_emphasis = (parent, index, errors, element, platform, locale) => {
 const check_lang = (parent, index, errors, element, platform, locale) => {
   const attributes = Object.keys(element.attributes || {});
 
+  const validLocales = [
+    'de-DE', 'en-AU', 'en-CA', 'en-GB', 'en-IN', 'en-US', 'es-ES', 'es-MX', 'es-US',
+    'fr-CA', 'fr-FR', 'hi-IN', 'it-IT', 'ja-JP', 'pt-BR'
+  ];
   // Must be xml:lang attribute
   attributes.forEach((attribute) => {
     if (attribute === 'xml:lang') {
-      if (['en-US', 'en-GB', 'en-IN', 'en-AU', 'en-CA', 'de-DE', 'es-ES', 'it-IT', 'ja-JP', 'fr-FR']
-        .indexOf(element.attributes['xml:lang']) === -1) {
+      if (!validLocales.includes(element.attributes['xml:lang'])) {
         errors.push(createTagError(element, attribute));
         element.attributes['xml:lang'] = 'en-US';
       }
