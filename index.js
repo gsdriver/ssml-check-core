@@ -5,6 +5,42 @@
 const convert = require('xml-js');
 const checktag = require('./checktag');
 
+function setPositionRecursive(ssml, element, pos) {
+  let i;
+  let result = pos;
+  let nextPos;
+  let nextResult;
+
+  if (element.type === 'element') {
+    // Only need to set position if this is an element
+    // Find the instance of this tag in ssml, starting at the given position
+    // It's possible they put spaces between the bracket and the element
+    const regex = new RegExp(`<\\s?${element.name}`);
+
+    const match = ssml.substring(pos).match(regex);
+    result = match ? (pos + match.index) : -1;
+    if (result > -1) {
+      element.position = result;
+    }
+  }
+
+  if (element.elements) {
+    nextPos = result;
+    for (i = 0; i < element.elements.length; i++) {
+      nextResult = setPositionRecursive(ssml, element.elements[i], nextPos);
+      if (nextResult > -1) {
+        nextPos = nextResult;
+      }
+    }
+  }
+
+  return result;
+}
+
+function setPositions(ssml, json) {
+  setPositionRecursive(ssml, json, 0);
+}
+
 function getAudioFiles(element) {
   let files = [];
 
@@ -73,7 +109,11 @@ function checkForValidTagsRecursive(parent, index, errors, element, platform, lo
     if ((validTags.indexOf(element.name) === -1) &&
       !(((platform === 'amazon') && (validAmazonTags.indexOf(element.name) !== -1)) ||
       ((platform === 'google') && (validGoogleTags.indexOf(element.name) !== -1)))) {
-      errors.push({type: 'tag', tag: element.name});
+      const error = {type: 'tag', tag: element.name};
+      if (element.position !== undefined) {
+        error.position = element.position;
+      }
+      errors.push(error);
       if (element.elements) {
         parent.elements.splice(index, 1, ...element.elements);
       } else {
@@ -140,6 +180,11 @@ function checkInternal(ssml, options, fix) {
       }
     }
 
+    // Get positions if requested
+    if (userOptions.getPositions) {
+      setPositions(ssml, result);
+    }
+
     // This needs to be a single item wrapped in a speak tag
     if (!result.elements || (result.elements.length !== 1) ||
       (result.elements[0].name !== 'speak')) {
@@ -155,7 +200,13 @@ function checkInternal(ssml, options, fix) {
     if (userOptions.platform !== 'google') {
       const audio = getAudioFiles(result.elements[0]);
       if (audio.length > 5) {
-        errors.push({type: 'Too many audio files'});
+        const error = {type: 'Too many audio files'};
+        if (userOptions.getPositions) {
+          // Find the 6th audio file and return the index
+          const audioMatches = [...ssml.matchAll(/<\s?audio/g)];
+          error.position = audioMatches[5].index;
+        }
+        errors.push(error);
         if (fix) {
           removeExtraAudio(result.elements[0]);
         }

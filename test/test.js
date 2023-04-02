@@ -11,6 +11,11 @@ function runTest(testName, ssml, options, expectedResult) {
     if (retVal) {
       result = '';
       retVal.forEach((value) => {
+        if (value.position) {
+          // Mark the position
+          result += 'at position ' + value.position + ' ';
+        }
+  
         if (value.type === 'audio') {
           // It's an audio error
           result += 'audio file ' + value.value + ' ' + value.detail;
@@ -24,7 +29,7 @@ function runTest(testName, ssml, options, expectedResult) {
             result += 'thing';
           }
         } else {
-          result = value.type;
+          result += value.type;
         }
       });
     } else {
@@ -192,6 +197,14 @@ promises.push(runTest('Invalid XML', '<tag>What is this?', null, 'Can\'t parse S
 promises.push(runTest('Too many audio files', '<speak><audio src=\"https://www.foo.com/foo.mp3\"/> one <audio src=\"https://www.foo.com/foo.mp3\"/> two <audio src=\"https://www.foo.com/foo.mp3\"/> three <audio src=\"https://www.foo.com/foo.mp3\"/> four <audio src=\"https://www.foo.com/foo.mp3\"/> five <audio src=\"https://www.foo.com/foo.mp3\"/> six </speak>', null, 'Too many audio files'));
 promises.push(runTest('Invalid platform', '<speak>Hello there</speak>', {platform: 'siri'}, 'invalid platform'));
 promises.push(runTest('Invalid ampersand', '<speak>This & that & those</speak>', null, 'Invalid & character'));
+
+// Position tests
+promises.push(runTest('Invalid say-as all with position', '<speak><say-as interpret-as="bleep">Wow</say-as></speak>', {platform: 'all', getPositions: true}, 'at position 7 say-as tag has invalid interpret-as value bleep'));
+promises.push(runTest('Invalid locale with position', '<speak><amazon:domain name="music">Sweet Child O’ Mine by Guns N’ Roses became one of their most successful singles, topping the billboard Hot 100 in 1988. Slash’s guitar solo on this song was ranked the 37th greatest solo of all time. Here’s Sweet Child O’ Mine. </amazon:domain></speak>', {platform: 'amazon', locale: 'en-AU', getPositions: true}, 'at position 7 amazon:domain tag has invalid name value music'));
+promises.push(runTest('Invalid Phonation with position', '<speak><amazon:effect name="drc" phonation="softly">Simple test with phonation<break strength="medium"/> code</amazon:effect></speak>', {platform: 'amazon', getPositions: true}, 'at position 7 amazon:effect tag has invalid phonation value softly'));
+promises.push(runTest('Bad break and invalid prosody rate with position', '<speak>You lost <break tim="200ms"/> Getting used to losing?  <prosody rate="xx-large">Take a break and come back tomorrow</prosody></speak>', {getPositions: true}, 'at position 16 break tag has invalid attribute timat position 62 prosody tag has invalid rate value xx-large'));
+promises.push(runTest('Too many audio files with position', '<speak><audio src=\"https://www.foo.com/foo.mp3\"/> one <audio src=\"https://www.foo.com/foo.mp3\"/> two <audio src=\"https://www.foo.com/foo.mp3\"/> three <audio src=\"https://www.foo.com/foo.mp3\"/> four <audio src=\"https://www.foo.com/foo.mp3\"/> five <audio src=\"https://www.foo.com/foo.mp3\"/> six </speak>', {getPositions: true}, 'at position 246 Too many audio files'));
+promises.push(runTest('Invalid tag with position', '<speak><break time="20000ms"/><tag>What is this?</tag>This &amp; that</speak>', {getPositions: true}, 'at position 7 break tag has invalid time value 20000msat position 30 tag tag has invalid thing'));
 
 // Test correct function
 promises.push(runCorrection('Valid voice', '<speak>I want to tell you a secret. <voice name="Kendra">I am not a real human.</voice>. Can you believe it?</speak>', {platform: 'amazon'}, 'valid'));

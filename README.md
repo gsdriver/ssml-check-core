@@ -22,12 +22,14 @@ The options structure is composed of the following fields with the following def
 
 ```
 {
-  platform: 'all',     // The voice platform to evaluate this SSML against.
-                    // Valid values are "all", "amazon", or "google".
-  locale:undefined, // The locale you want to check against, used for certain
-                    // locale-specific attributes like amazon:emotion
+  platform: 'all',           // The voice platform to evaluate this SSML against.
+                             // Valid values are "all", "amazon", or "google".
+  locale:undefined,          // The locale you want to check against, used for certain
+                             // locale-specific attributes like amazon:emotion
   unsupportedTags:undefined, // An array of tags that will be flagged as invalid
                              // For example, ['prosody']
+  getPositions:false,        // If set, the index of the tag will be returned as the position
+                             // field within the error object
 }
 ```
 
@@ -39,6 +41,7 @@ The return value is a Promise resolving to an array of errors that were encounte
   tag,        // The tag that had an error (set if type is "tag")
   attribute,  // The attribute that had an error (set if type is "tag")
   value,      // The attribute value that was in error (set if type is "tag" or "audio")
+  position,   // The position of the start of the tag within the input string (set if getPositions is true)
 }
 ```
 
