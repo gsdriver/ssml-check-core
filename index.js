@@ -109,7 +109,11 @@ function checkForValidTagsRecursive(parent, index, errors, element, platform, lo
     if ((validTags.indexOf(element.name) === -1) &&
       !(((platform === 'amazon') && (validAmazonTags.indexOf(element.name) !== -1)) ||
       ((platform === 'google') && (validGoogleTags.indexOf(element.name) !== -1)))) {
-      errors.push({type: 'tag', tag: element.name});
+      const error = {type: 'tag', tag: element.name};
+      if (element.position !== undefined) {
+        error.position = element.position;
+      }
+      errors.push(error);
       if (element.elements) {
         parent.elements.splice(index, 1, ...element.elements);
       } else {
@@ -196,7 +200,13 @@ function checkInternal(ssml, options, fix) {
     if (userOptions.platform !== 'google') {
       const audio = getAudioFiles(result.elements[0]);
       if (audio.length > 5) {
-        errors.push({type: 'Too many audio files'});
+        const error = {type: 'Too many audio files'};
+        if (userOptions.getPositions) {
+          // Find the 6th audio file and return the index
+          const audioMatches = [...ssml.matchAll(/<\s?audio/g)];
+          error.position = audioMatches[5].index;
+        }
+        errors.push(error);
         if (fix) {
           removeExtraAudio(result.elements[0]);
         }
