@@ -1,6 +1,8 @@
 export interface ISSMLCheckOptions {
   platform?: "google" | "amazon" | "all";
   locale?: string;
+  unsupportedTags?: string[];
+  getPositions?: boolean;
 }
 
 export interface ISSMLCheckError {

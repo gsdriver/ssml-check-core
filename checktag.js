@@ -9,6 +9,9 @@ function createTagError(element, attribute, undefinedValue) {
   error.tag = element.name;
   error.attribute = attribute;
   error.value = (undefinedValue || !element.attributes) ? undefined : element.attributes[attribute];
+  if (element.position !== undefined) {
+    error.position = element.position;
+  }
 
   return error;
 }
@@ -373,7 +376,11 @@ const check_desc = (parent, index, errors, element, platform, locale) => {
   let removed;
   if (!parent || (parent.name !== 'audio')) {
     // Invalid in this context
-    errors.push({type: 'tag', tag: element.name});
+    const error = {type: 'tag', tag: element.name};
+    if (element.position !== undefined) {
+      error.position = element.position;
+    }
+    errors.push(error);
     parent.elements.splice(index, 1);
     removed = true;
   }
@@ -540,6 +547,9 @@ const check_par = (parent, index, errors, element, platform, locale) => {
       if (['par', 'seq', 'media'].indexOf(item.name) === -1) {
         const error = {type: 'tag', tag: element.name};
         error.value = item.name;
+        if (element.position !== undefined) {
+          error.position = element.position;
+        }
         errors.push(error);
         element.elements.splice(i, 1);
         i--;

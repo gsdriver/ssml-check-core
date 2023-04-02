@@ -5,6 +5,42 @@
 const convert = require('xml-js');
 const checktag = require('./checktag');
 
+function setPositionRecursive(ssml, element, pos) {
+  let i;
+  let result = pos;
+  let nextPos;
+  let nextResult;
+
+  if (element.type === 'element') {
+    // Only need to set position if this is an element
+    // Find the instance of this tag in ssml, starting at the given position
+    // It's possible they put spaces between the bracket and the element
+    const regex = new RegExp(`<\\s?${element.name}`);
+
+    const match = ssml.substring(pos).match(regex);
+    result = match ? (pos + match.index) : -1;
+    if (result > -1) {
+      element.position = result;
+    }
+  }
+
+  if (element.elements) {
+    nextPos = result;
+    for (i = 0; i < element.elements.length; i++) {
+      nextResult = setPositionRecursive(ssml, element.elements[i], nextPos);
+      if (nextResult > -1) {
+        nextPos = nextResult;
+      }
+    }
+  }
+
+  return result;
+}
+
+function setPositions(ssml, json) {
+  setPositionRecursive(ssml, json, 0);
+}
+
 function getAudioFiles(element) {
   let files = [];
 
@@ -138,6 +174,11 @@ function checkInternal(ssml, options, fix) {
       if (!result || !fix) {
         return Promise.resolve({errors: errors});
       }
+    }
+
+    // Get positions if requested
+    if (userOptions.getPositions) {
+      setPositions(ssml, result);
     }
 
     // This needs to be a single item wrapped in a speak tag
