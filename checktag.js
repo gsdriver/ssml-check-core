@@ -157,8 +157,9 @@ const check_amazon_breath = (parent, index, errors, element, platform, locale) =
 };
 
 const check_amazon_domain = (parent, index, errors, element, platorm, locale) => {
+  // The locale is optional but if set
   // This tag is only valid for en-US, de-DE, en-GB, en-CA, en-AU, and jp-JP
-  if (['en-US', 'en-GB', 'jp-JP', 'de-DE', 'en-CA', 'en-AU'].indexOf(locale) === -1) {
+  if (locale && (['en-US', 'en-GB', 'jp-JP', 'de-DE', 'en-CA', 'en-AU'].indexOf(locale) === -1)) {
     // Keep the text, but remove the element
     errors.push(createTagError(element, 'none'));
     if (element.elements) {
@@ -181,7 +182,8 @@ const check_amazon_domain = (parent, index, errors, element, platorm, locale) =>
         fun: ['jp-JP'],
       };
 
-      if (!allowedValues[element.attributes.name] || (allowedValues[element.attributes.name].indexOf(locale) === -1)) {
+      if (!allowedValues[element.attributes.name] || 
+        ((locale && (allowedValues[element.attributes.name].indexOf(locale) === -1)))) {
         errors.push(createTagError(element, attribute));
         element.attributes.name = 'news';
       }
