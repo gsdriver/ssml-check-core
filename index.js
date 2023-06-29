@@ -96,14 +96,17 @@ function checkForValidTagsRecursive(parent, index, errors, element, platform, lo
   let removedTag;
 
   if (element.name) {
+    // Note that voice is listed separately in the list of valid Amazon and Google tags
+    // Because the required attributes differs between these platforms, a platform must be
+    // specified for us to properly check this tag
     const validTags = 
-      ['audio', 'break', 'emphasis', 'mark', 'p', 'prosody', 's', 'say-as', 'speak', 'sub']
+      ['audio', 'break', 'emphasis', 'lang', 'mark', 'p', 'phoneme', 'prosody', 's', 'say-as', 'speak', 'sub']
       .filter((t) => !unsupportedTags.includes(t));
     const validAmazonTags = 
-      ['amazon:auto-breaths', 'amazon:breath', 'amazon:effect', 'amazon:emotion', 'amazon:domain', 'lang', 'phoneme', 'voice', 'w', 'alexa:name']
+      ['amazon:auto-breaths', 'amazon:breath', 'amazon:effect', 'amazon:emotion', 'amazon:domain', 'voice', 'w', 'alexa:name']
       .filter((t) => !unsupportedTags.includes(t));
     const validGoogleTags = 
-      ['par', 'seq', 'media', 'desc']
+      ['par', 'seq', 'media', 'desc', 'voice']
       .filter((t) => !unsupportedTags.includes(t));
 
     if ((validTags.indexOf(element.name) === -1) &&

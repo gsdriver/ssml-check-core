@@ -573,6 +573,8 @@ const check_phoneme = (parent, index, errors, element, platform, locale) => {
         errors.push(createTagError(element, attribute));
         element.attributes.alphabet = 'ipa';
       }
+    // Note that we don't perform validation of the ph attribute
+    // This could be covered in a future version
     } else if (attribute !== 'ph') {
       // Invalid attribute
       errors.push(createTagError(element, attribute, true));
@@ -710,7 +712,7 @@ const check_speak = (parent, index, errors, element, platform, locale) => {
   return false;
 };
 
-const check_voice = (parent, index, errors, element, platform, locale) => {
+const check_voice_amazon = (parent, index, errors, element, platform, locale) => {
   const attributes = Object.keys(element.attributes || {});
   // Attribute must be name
   attributes.forEach((attribute) => {
@@ -729,6 +731,101 @@ const check_voice = (parent, index, errors, element, platform, locale) => {
       element.attributes[attribute] = undefined;
     }
   });
+
+  return false;
+};
+
+const check_voice_google = (parent, index, errors, element, platform, locale) => {
+  const is_valid_voice_name = (name) => {
+    // check that name is of the form <locale>-<type>-<name>
+    // where <locale> is a valid locale, <type> is one of Standard or Wavenet, and <name> is a single character
+    // This is looser than the Google documentation, but we don't want to make a live call to get the list of valid voices
+    const parts = name.split('-');
+    if (parts.length !== 4) {
+      return false;
+    }
+    if (['af', 'ar', 'bn', 'cmn', 'cs', 'da', 'de', 'el', 'en', 'es', 'fi', 
+      'fil', 'fr', 'gu', 'hi', 'hu', 'id', 'it', 'ja', 'kn', 'ko', 'ml', 'mr', 
+      'nb', 'nl', 'pl', 'pt', 'ru', 'sk', 'sv', 'sw', 'ta', 'te', 'th', 'tr', 
+      'uk', 'vi', 'yue', 'zh'].indexOf(parts[0]) === -1) {
+      return false;
+    }
+    if (['Standard', 'Wavenet'].indexOf(parts[2]) === -1) {
+      return false;
+    }
+    if (['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'].indexOf(parts[3]) === -1) {
+      return false;
+    }
+    if (parts[1].length !== 2) {
+      return false;
+    }
+
+    return true;
+  };
+
+  // Name attribute is optional
+  let hasName = false;
+  let hasOptionalAttribute = false;
+
+  const attributes = Object.keys(element.attributes || {});
+  attributes.forEach((attribute) => {
+    if (attribute === 'name') {
+      hasName = true;
+
+      if (!is_valid_voice_name(element.attributes.name)) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.name = 'en-US-Standard-A';
+      }  
+    } else if (attribute === 'gender') {
+      // Value must be 'male', 'female', or 'neutral'
+      hasOptionalAttribute = true;
+      if (['male', 'female', 'neutral'].indexOf(element.attributes.gender) === -1) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.gender = 'neutral';
+      }
+    } else if (attribute === 'variant') {
+      // Variant should be a name
+      hasOptionalAttribute = true;
+      if (!is_valid_voice_name(element.attributes.variant)) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.variant = 'en-US-Standard-A';
+      }
+    } else if (attribute === 'language') {
+      hasOptionalAttribute = true;
+      // attribute must be a valid language code
+      if (!element.attributes.language.match(/^[a-z]{2}-[A-Z]{2}$/)) {
+        errors.push(createTagError(element, attribute));
+        element.attributes.language = 'en-US';
+      }
+    // required or ordering are also valid, but we don't check those as we
+    // are strict and require that any attribute that is set is valid
+    } else if ((attribute !== 'required') && (attribute !== 'ordering')) {
+      // Invalid attribute
+      errors.push(createTagError(element, attribute, true));
+      element.attributes[attribute] = undefined;      
+    }
+  });
+
+  // If they don't have a name, they must have one of the other attributes
+  if (!hasName && !hasOptionalAttribute) {
+    errors.push(createTagError(element, 'name', true));
+    if (!element.attributes) {
+      element.attributes = {};
+    }
+    element.attributes.name = 'en-US-Standard-A';
+  }
+};
+
+const check_voice = (parent, index, errors, element, platform, locale) => {
+  // Voice is implemented differently for each platform, therefore a platform value is required
+  if (platform === 'amazon') {
+    return check_voice_amazon(parent, index, errors, element, platform, locale);
+  } else if (platform === 'google') {
+    return check_voice_google(parent, index, errors, element, platform, locale);
+  } else {
+    errors.push(createTagError(element, 'voice', true));
+    element.attributes.voice = undefined;
+  }
 
   return false;
 };

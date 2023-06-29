@@ -136,13 +136,14 @@ promises.push(runTest('Google emphasis', '<speak>I already told you I <emphasis 
 promises.push(runTest('Valid lang', '<speak><lang xml:lang="fr-FR">J\'adore chanter</lang></speak>', {platform: 'amazon'}, 'valid'));
 promises.push(runTest('Valid lang Brazil', '<speak><lang xml:lang="pt-BR">Blame it on Rio</lang></speak>', {platform: 'amazon'}, 'valid'));
 promises.push(runTest('Invalid lang', '<speak><lang xml:lang="pt-DE">German Portguese</lang></speak>', {platform: 'amazon'}, 'lang tag has invalid xml:lang value pt-DE'));
+promises.push(runTest('Valid lang Brazil All', '<speak><lang xml:lang="pt-BR">Blame it on Rio</lang></speak>', {platform: 'all'}, 'valid'));
 
 // p tests
 promises.push(runTest('Valid p', '<speak><p>This is the first paragraph. There should be a pause after this text is spoken.</p><p>This is the second paragraph.</p></speak>', null, 'valid'));
 promises.push(runTest('Invalid p', '<speak><p dog="cute">This is the first paragraph. There should be a pause after this text is spoken.</p><p>This is the second paragraph.</p></speak>', null, 'p tag has invalid attribute dog'));
 
 // phoneme tests
-promises.push(runTest('Valid phoneme', '<speak>You say, <phoneme alphabet="ipa" ph="pɪˈkɑːn">pecan</phoneme>. I say, <phoneme alphabet="ipa" ph="ˈpi.kæn">pecan</phoneme>.</speak>', {platform: 'amazon'}, 'valid'));
+promises.push(runTest('Valid phoneme', '<speak>You say, <phoneme alphabet="ipa" ph="pɪˈkɑːn">pecan</phoneme>. I say, <phoneme alphabet="ipa" ph="ˈpi.kæn">pecan</phoneme>.</speak>', {platform: 'all'}, 'valid'));
 promises.push(runTest('Invalid phoneme', '<speak>You say, <phoneme alphabet="ipa2">pecan</phoneme>. I say, <phoneme alphabet="ipa" ph="ˈpi.kæn">pecan</phoneme>.</speak>', {platform: 'amazon'}, 'phoneme tag has invalid alphabet value ipa2'));
 
 // prosody tests
@@ -179,6 +180,9 @@ promises.push(runTest('Invalid Google time', '<speak><say-as interpret-as="time"
 // voice tests
 promises.push(runTest('Valid voice', '<speak>I want to tell you a secret. <voice name="Kendra">I am not a real human.</voice>. Can you believe it?</speak>', {platform: 'amazon'}, 'valid'));
 promises.push(runTest('Valid voice', '<speak>I want to tell you a secret. <voice name="Samantha">I am not a real human.</voice>. Can you believe it?</speak>', {platform: 'amazon'}, 'voice tag has invalid name value Samantha'));
+promises.push(runTest('Invalid voice Google', '<speak>I want to tell you a secret. <voice name="Samantha">I am not a real human.</voice>. Can you believe it?</speak>', {platform: 'google'}, 'voice tag has invalid name value Samantha'));
+promises.push(runTest('Valid voice Google', '<speak>The dog is friendly<voice name="fr-CA-Wavenet-B">mais la chat est mignon</voice><break time="250ms"/> said a pet shop owner</speak>', {platform: 'google'}, 'valid'));
+promises.push(runTest('Valid voice Google', '<speak>Today is supposed to be <voice language="en-GB" gender="female" ordering="language gender">Sunday Funday.</voice></speak>', {platform: 'google'}, 'valid'));
 
 // Media tests
 promises.push(runTest('Valid media', '<speak><seq><media begin="0.5s"><speak>Who invented the Internet?</speak></media><media begin="2.0s"><speak>The Internet was invented by cats.</speak></media><media soundLevel="-6dB"><audio src="https://actions.google.com/.../cartoon_boing.ogg"/></media><media repeatCount="3" soundLevel="+2.28dB" fadeInDur="2s" fadeOutDur="0.2s"><audio src="https://actions.google.com/.../cat_purr_close.ogg"/></media></seq> </speak>', {platform: 'google'}, 'valid'));
@@ -225,6 +229,8 @@ promises.push(runCorrection('Invalid locale on amazon:emotion', '<speak><amazon:
 promises.push(runCorrection('Invalid attribute on amazon:domain', '<speak><amazon:domain name="excited" intensity="medium">Christina wins this round!</amazon:domain></speak>', {platform: 'amazon', locale: 'en-US'}, '<speak><amazon:domain name="news">Christina wins this round!</amazon:domain></speak>'));
 promises.push(runCorrection('Vocal tract out of range', '<speak><amazon:effect name="whispered" vocal-tract-length="-70%">Simple test with lower vocal tract length<break strength="medium"/> code</amazon:effect></speak>', {platform: 'amazon'}, '<speak><amazon:effect name="whispered" vocal-tract-length="-50%">Simple test with lower vocal tract length<break strength="medium"/> code</amazon:effect></speak>'));
 promises.push(runCorrection('Invalid Auto-breath values', '<speak><amazon:auto-breaths volume="whatever" frequency="lowest" duration="long">Take a breather in reading this text, even though it\'s not too long it\'s perfectly valid SSML</amazon:auto-breaths></speak>', {platform: 'amazon'}, '<speak><amazon:auto-breaths volume="medium" frequency="lowest" duration="long" frequncy="medium">Take a breather in reading this text, even though it\'s not too long it\'s perfectly valid SSML</amazon:auto-breaths></speak>'));
+promises.push(runCorrection('Invalid voice Google', '<speak>I want to tell you a secret. <voice name="Samantha">I am not a real human.</voice>. Can you believe it?</speak>', {platform: 'google'}, '<speak>I want to tell you a secret. <voice name="en-US-Standard-A">I am not a real human.</voice>. Can you believe it?</speak>'));
+promises.push(runCorrection('Invalid voice Google', '<speak>No secrets. <voice>I am not a real human.</voice>. Can you believe it?</speak>', {platform: 'google'}, '<speak>No secrets. <voice name="en-US-Standard-A">I am not a real human.</voice>. Can you believe it?</speak>'));
 
 // Final summary
 Promise.all(promises).then(() => {
