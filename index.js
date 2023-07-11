@@ -21,6 +21,8 @@ function setPositionRecursive(ssml, element, pos) {
     result = match ? (pos + match.index) : -1;
     if (result > -1) {
       element.position = result;
+      // Skip the tag name characters that was just matched for next recursion
+      result += element.name.length + 1;
     }
   }
 
