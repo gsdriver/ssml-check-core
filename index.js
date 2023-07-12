@@ -5,6 +5,8 @@
 const convert = require('xml-js');
 const checktag = require('./checktag');
 
+// The return value from this function is the position of the next character to check
+// That is, the position of the character after the element name (not the starting bracket)
 function setPositionRecursive(ssml, element, pos) {
   let i;
   let result = pos;
