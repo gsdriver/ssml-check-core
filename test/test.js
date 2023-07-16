@@ -15,8 +15,10 @@ function runTest(testName, ssml, options, expectedResult) {
           // Mark the position
           result += 'at position ' + value.position + ' ';
         }
-  
-        if (value.type === 'audio') {
+
+        if (value.message) {
+          result += value.message
+        } else if (value.type === 'audio') {
           // It's an audio error
           result += 'audio file ' + value.value + ' ' + value.detail;
         } else if (value.tag) {
@@ -64,8 +66,9 @@ function runCorrection(testName, ssml, options, expectedResult) {
 const start = Date.now();
 const promises = [];
 
+// simple Speak tag test
 promises.push(runTest('Simple SSML', '<speak>Simple test</speak>', null, 'valid'));
-
+promises.push(runTest('Missing SSML', 'Simple test', null, 'Text data outside of root node.\nLine: 0\nColumn: 11\nChar: t'));
 
 // Amazon alexa:name test
 promises.push(runTest('alexa:name test', '<speak>Hi <alexa:name type="first" personId="amzn1.ask.person.ABCDEF"/> nice to meet you!</speak>', {platform: 'amazon'}, 'valid'));
@@ -199,7 +202,7 @@ promises.push(runTest('Prosody unsupported', '<speak><prosody rate="slow">Hello 
 promises.push(runTest('Bad break and invalid prosody rate', '<speak>You lost <break tim="200ms"/> Getting used to losing?  <prosody rate="xx-large">Take a break and come back tomorrow</prosody></speak>', null, 'break tag has invalid attribute timprosody tag has invalid rate value xx-large'));
 
 // Invalid formats
-promises.push(runTest('Invalid XML', '<tag>What is this?', null, 'Can\'t parse SSML'));
+promises.push(runTest('Invalid XML', '<tag>What is this?', null, 'Converting circular structure to JSON\n    --> starting at object with constructor \'Object\'\n    |     property \'elements\' -> object with constructor \'Array\'\n    |     index 0 -> object with constructor \'Object\'\n    --- property \'parent\' closes the circle'));
 promises.push(runTest('Too many audio files', '<speak><audio src=\"https://www.foo.com/foo.mp3\"/> one <audio src=\"https://www.foo.com/foo.mp3\"/> two <audio src=\"https://www.foo.com/foo.mp3\"/> three <audio src=\"https://www.foo.com/foo.mp3\"/> four <audio src=\"https://www.foo.com/foo.mp3\"/> five <audio src=\"https://www.foo.com/foo.mp3\"/> six </speak>', null, 'Too many audio files'));
 promises.push(runTest('Invalid platform', '<speak>Hello there</speak>', {platform: 'siri'}, 'invalid platform'));
 promises.push(runTest('Invalid ampersand', '<speak>This & that & those</speak>', null, 'Invalid & character'));

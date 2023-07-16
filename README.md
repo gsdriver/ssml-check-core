@@ -42,6 +42,7 @@ The return value is a Promise resolving to an array of errors that were encounte
   attribute,  // The attribute that had an error (set if type is "tag")
   value,      // The attribute value that was in error (set if type is "tag" or "audio")
   position,   // The position of the start of the tag within the input string (set if getPositions is true)
+  message,    // A fully formed human readable string with details of the error. (set if error includes a message) 
 }
 ```
 
