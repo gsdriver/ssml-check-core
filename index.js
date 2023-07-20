@@ -179,7 +179,7 @@ function checkInternal(ssml, options, fix) {
         errors.push({type: 'Invalid & character'});
       } catch(err) {
         // Nope, it's some other error
-        errors.push({type: 'Can\'t parse SSML'});
+        errors.push({type: 'Can\'t parse SSML', message: err.message});
       }
 
       if (!result || !fix) {
@@ -222,7 +222,7 @@ function checkInternal(ssml, options, fix) {
 
     return Promise.resolve({json: result, errors: (errors.length ? errors : undefined)});
   } catch (err) {
-    errors.push({type: 'unknown error'});
+    errors.push({type: 'unknown error', message: err.message});
   }
 
   return Promise.resolve({errors: (errors.length ? errors : undefined)});
